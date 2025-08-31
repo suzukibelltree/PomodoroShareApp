@@ -17,6 +17,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // TODO: 本番では gradle.properties など外部から注入
+        buildConfigField(
+            "String",
+            "WEB_CLIENT_ID",
+            "\"620028010859-cvuadtmajqcdj0v6ri5g2scgv14t47ke.apps.googleusercontent.com\""
+        )
     }
 
     buildTypes {
@@ -37,6 +43,7 @@ android {
     }
     buildFeatures {
         compose = true
+    buildConfig = true
     }
 }
 
@@ -65,6 +72,8 @@ dependencies {
     implementation(libs.firebase.ui.auth)
     // For navigation compose
     implementation(libs.androidx.navigation.compose)
+    // Google Auth
+    implementation(libs.google.play.services.auth)
 
     // For ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.compose)
