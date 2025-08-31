@@ -1,54 +1,48 @@
 package com.belltree.pomodoroshareapp.domain.repository
 
-import android.content.Context
-import com.belltree.pomodoroshareapp.auth.TokenManager
-import com.belltree.pomodoroshareapp.infra.api.ApiClient
-import com.belltree.pomodoroshareapp.infra.api.ApiEndpoints
-import org.json.JSONObject
+import android.util.Log
+import com.belltree.pomodoroshareapp.domain.models.User
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.firestore
 
-interface AuthRepository {
-    suspend fun login(email: String, password: String, context: Context): Result<String>
-    suspend fun register(email: String, password: String, displayName: String, context: Context): Result<String>
-}
-class AuthRepositoryImpl : AuthRepository {
-    // ViewModel で API 呼び出し処理をまとめる
-    override suspend fun login(email: String, password: String, context: Context): Result<String> {
-        return try {
-            val response = ApiClient.request(
-                url = ApiEndpoints.Auth.LOGIN,
-                method = "POST",
-                body = mapOf("email" to email, "password" to password)
-            )
-            val json = JSONObject(response ?: "")
-            val token = json.optString("token", null)
-            if (token != null) {
-                TokenManager(context).saveToken(token)
+class AuthRepository {
+
+    private val firebaseAuth = FirebaseAuth.getInstance()
+    private val db = Firebase.firestore
+
+    // 現在のユーザーを取得する関数
+    fun getCurrentUser(): FirebaseUser? = firebaseAuth.currentUser
+
+    // Googleサインインを行う関数
+    fun signInWithGoogle(idToken: String, onResult: (Boolean, String?) -> Unit){
+        val credential = com.google.firebase.auth.GoogleAuthProvider.getCredential(idToken, null)
+        firebaseAuth.signInWithCredential(credential)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) onResult(true, null)
+                else onResult(false, task.exception?.message)
             }
-            Result.success(response ?: "")
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
     }
 
-
-    override suspend fun register(email: String, password: String, displayName: String, context: Context): Result<String> {
-        return try {
-            val response = ApiClient.request(
-                url = ApiEndpoints.Auth.REGISTER,
-                method = "POST",
-                body = mapOf("email" to email, "password" to password, "name" to displayName)
-            )
-            val json = JSONObject(response ?: "")
-            val token = json.optString("token", null)
-            if (token != null) {
-                TokenManager(context).saveToken(token)
+    // 匿名サインインを行う関数
+    fun signInAnonymously(onResult: (Boolean, String?) -> Unit) {
+        firebaseAuth.signInAnonymously()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) onResult(true, null)
+                else onResult(false, task.exception?.message)
             }
-            Result.success(response ?: "")
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    }
+
+    // Firestoreにユーザー情報を追加する関数
+    fun addUserToFirestore(user: User) {
+        db.collection("users").document(user.userId)
+            .set(user)
+            .addOnFailureListener { e -> Log.e("AuthRepository", "Failed to add user: $e") }
+    }
+
+    // サインアウトを行う関数
+    fun signOut() {
+        firebaseAuth.signOut()
     }
 }
-
-
-
