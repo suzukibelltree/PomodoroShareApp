@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "620028010859",
+    "project_id": "pomodoroshareapp",
+    "storage_bucket": "pomodoroshareapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:620028010859:android:fa6696658cd174fab92c2e",
+        "android_client_info": {
+          "package_name": "com.belltree.pomodoroshareapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "620028010859-vsl9s90bdntjur5eqi2qpr9vsrr1jtll.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.belltree.pomodoroshareapp",
+            "certificate_hash": "ca6e39fee35c8762e80ab9c4d0f7e1ff2e95f05c"
+          }
+        },
+        {
+          "client_id": "620028010859-cvuadtmajqcdj0v6ri5g2scgv14t47ke.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhGEGW24ecahBo-Gueec_ETJwEnqM2tfU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "620028010859-cvuadtmajqcdj0v6ri5g2scgv14t47ke.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
