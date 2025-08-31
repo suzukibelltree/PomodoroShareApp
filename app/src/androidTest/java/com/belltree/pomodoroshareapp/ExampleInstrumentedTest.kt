@@ -1,4 +1,4 @@
-package com.example.pomodoroshareapp
+package com.belltree.pomodoroshareapp
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

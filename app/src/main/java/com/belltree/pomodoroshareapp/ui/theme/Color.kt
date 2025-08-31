@@ -1,4 +1,4 @@
-package com.example.pomodoroshareapp.ui.theme
+package com.belltree.pomodoroshareapp.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

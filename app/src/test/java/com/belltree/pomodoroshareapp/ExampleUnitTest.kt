@@ -1,4 +1,4 @@
-package com.example.pomodoroshareapp
+package com.belltree.pomodoroshareapp
 
 import org.junit.Test
 
