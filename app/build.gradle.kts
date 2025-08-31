@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.pomodoroshareapp"
+    namespace = "com.belltree.pomodoroshareapp"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.pomodoroshareapp"
+        applicationId = "com.belltree.pomodoroshareapp"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
