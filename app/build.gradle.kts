@@ -61,6 +61,8 @@ dependencies {
     // For navigation compose
     implementation(libs.androidx.navigation.compose)
 
+    // For ViewModel
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
