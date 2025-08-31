@@ -1,5 +1,11 @@
 package com.belltree.pomodoroshareapp.domain.repository
 
+import android.content.Context
+import com.belltree.pomodoroshareapp.auth.TokenManager
+import com.belltree.pomodoroshareapp.infra.api.ApiClient
+import com.belltree.pomodoroshareapp.infra.api.ApiEndpoints
+import org.json.JSONObject
+
 interface AuthRepository {
     suspend fun login(email: String, password: String, context: Context): Result<String>
     suspend fun register(email: String, password: String, displayName: String, context: Context): Result<String>
