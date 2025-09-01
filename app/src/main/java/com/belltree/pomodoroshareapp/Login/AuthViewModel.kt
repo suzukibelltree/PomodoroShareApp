@@ -3,9 +3,11 @@ package com.belltree.pomodoroshareapp.Login
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.belltree.pomodoroshareapp.domain.repository.AuthRepository
+import com.belltree.pomodoroshareapp.domain.repository.UserRepository
 import com.google.firebase.auth.FirebaseUser
 import androidx.compose.runtime.State
 import com.belltree.pomodoroshareapp.domain.models.User
+
 
 /**
  * 認証関連の状態と操作を管理するViewModel
@@ -25,6 +27,8 @@ class AuthViewModel(internal val repository: AuthRepository = AuthRepository()) 
     private val _isNewUser = mutableStateOf(false)
     val isNewUser: State<Boolean> = _isNewUser
 
+    val userRepository = UserRepository()
+
     // 匿名認証を行う関数
     fun signInAnonymously() {
         _isLoading.value = true
@@ -33,7 +37,7 @@ class AuthViewModel(internal val repository: AuthRepository = AuthRepository()) 
             if (success) {
                 _currentUser.value = repository.getCurrentUser()
                 _currentUser.value?.let { user ->
-                    repository.addUserToFirestore(
+                    userRepository.addUserToFirestore(
                         User(userId = user.uid, userName = user.displayName ?: "Guest User")
                     )
                 }
@@ -48,7 +52,7 @@ class AuthViewModel(internal val repository: AuthRepository = AuthRepository()) 
         _errorMessage.value = null
 
         // Firestore にユーザーを追加
-        repository.addUserToFirestore(
+        userRepository.addUserToFirestore(
             User(userId = user?.uid ?: "", userName = user?.displayName ?: "Guest User")
         )
     }

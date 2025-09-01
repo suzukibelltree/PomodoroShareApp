@@ -10,7 +10,6 @@ import com.google.firebase.firestore.firestore
 class AuthRepository {
 
     private val firebaseAuth = FirebaseAuth.getInstance()
-    private val db = Firebase.firestore
     // 現在のユーザーを取得する関数
     fun getCurrentUser(): FirebaseUser? = firebaseAuth.currentUser
 
@@ -39,14 +38,6 @@ class AuthRepository {
                 else onResult(false, task.exception?.message)
             }
     }
-
-    // Firestoreにユーザー情報を追加する関数
-    fun addUserToFirestore(user: User) {
-        db.collection("users").document(user.userId)
-            .set(user)
-            .addOnFailureListener { e -> Log.e("AuthRepository", "Failed to add user: $e") }
-    }
-
     // サインアウトを行う関数
     fun signOut() {
         firebaseAuth.signOut()
