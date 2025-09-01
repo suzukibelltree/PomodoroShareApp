@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.Button
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -24,18 +26,20 @@ import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 fun HomeScreen(
     modifier: Modifier = Modifier,
     onNavigateSettings: () -> Unit = {},
-    onNavigateMakeSpace: () -> Unit = {}
+    onNavigateMakeSpace: () -> Unit = {},
+    onNavigateRecord: () -> Unit = {},
 ) {
 	Scaffold(
 		topBar = {
 			AppTopBar(
 				title = "Home",
 				actionIcons = listOf(
-					Icons.Filled.Settings to onNavigateSettings
+					Icons.Filled.History to onNavigateRecord,
+					Icons.Filled.Settings to onNavigateSettings,
 				)
 			)
 		}
-	) {innerPadding ->
+	) { innerPadding: PaddingValues ->
 		Box(
 			modifier = Modifier
 				.fillMaxSize()
