@@ -54,8 +54,7 @@ fun AuthScreen(
 					.setFilterByAuthorizedAccounts(false)
 					.build()
 			)
-			.setAutoSelectEnabled(false)
-			.build()
+			.setAutoSelectEnabled(false)			.build()
 	}
 
 	var launching by remember { mutableStateOf(false) }
