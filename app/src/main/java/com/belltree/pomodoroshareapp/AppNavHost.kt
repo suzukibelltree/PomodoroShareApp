@@ -9,6 +9,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.belltree.pomodoroshareapp.Login.AuthScreen
 import com.belltree.pomodoroshareapp.Login.AuthViewModel
 import com.belltree.pomodoroshareapp.Home.HomeScreen
+import com.belltree.pomodoroshareapp.Setting.SettingScreen
+import com.belltree.pomodoroshareapp.Setting.SettingViewModel
 
 // 画面遷移をここで管理する
 @Composable
@@ -34,10 +36,17 @@ fun AppNavHost(modifier: Modifier = Modifier){
 
         composable("home") {
             HomeScreen(
+                onNavigateSettings = { navController.navigate("settings") }
+            )
+        }
+
+        composable("settings") {
+            SettingScreen(
+                viewModel = SettingViewModel(),
                 onSignOut = {
                     authViewModel.signOut()
                     navController.navigate("login") {
-                        popUpTo("home") { inclusive = true }
+                        popUpTo("settings") { inclusive = true }
                     }
                 }
             )
