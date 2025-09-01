@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 
 @Composable
-fun RecordScreen(
+fun SpaceScreen(
     modifier: Modifier = Modifier,
     onNavigateHome: () -> Unit = {}
 ) {

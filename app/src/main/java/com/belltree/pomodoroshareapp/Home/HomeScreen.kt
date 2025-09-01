@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -20,7 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.belltree.pomodoroshareapp.domain.models.Space
+import com.belltree.pomodoroshareapp.domain.models.SpaceState
+import com.belltree.pomodoroshareapp.domain.models.TimerState
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
+import kotlin.String
 
 @Composable
 fun HomeScreen(
@@ -28,6 +34,22 @@ fun HomeScreen(
     onNavigateSettings: () -> Unit = {},
     onNavigateMakeSpace: () -> Unit = {},
     onNavigateRecord: () -> Unit = {},
+	onNavigateSpace: () -> Unit = {},
+	spaceList: List<Space> = listOf(
+		Space(
+			  spaceId = "",
+		      ownerId = "",
+              spaceName = "",
+              spaceState = SpaceState.WAITING,
+			  timerState = TimerState.STOPPED,
+			   startTime = 0L,
+			   sessionCount = 0,
+			   participantsId = emptyList(),
+			   createdAt = 0L,
+				lastUpdated = 0L,
+				isPrivate = false,
+		),
+	)
 ) {
 	Scaffold(
 		topBar = {
@@ -45,6 +67,14 @@ fun HomeScreen(
 				.fillMaxSize()
 				.padding(innerPadding)
 		){
+			LazyColumn(
+				modifier = Modifier.fillMaxSize(),
+				contentPadding = PaddingValues(8.dp),
+			) {
+				items(spaceList) { item ->
+					HomeRow(space = item, onClick = { onNavigateSpace() })
+				}
+			}
 			FloatingActionButton(
 				modifier = Modifier
 					.align(Alignment.BottomEnd)
