@@ -18,6 +18,7 @@ enum class SpaceState {
     WAITING,
     WORKING,
     BREAK,
+    FINISHED
 }
 
 enum class TimerState {
