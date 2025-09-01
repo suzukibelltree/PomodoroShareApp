@@ -23,7 +23,8 @@ import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-    onNavigateSettings: () -> Unit = {}
+    onNavigateSettings: () -> Unit = {},
+    onNavigateMakeSpace: () -> Unit = {}
 ) {
 	Scaffold(
 		topBar = {
@@ -44,7 +45,7 @@ fun HomeScreen(
 				modifier = Modifier
 					.align(Alignment.BottomEnd)
 					.padding(12.dp),
-				onClick = { /*TODO*/ }
+				onClick = {onNavigateMakeSpace()}
 			) { Text(text = "+", fontSize = 24.sp, fontWeight = FontWeight.Bold) }
 		}
 	}

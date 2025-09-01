@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.belltree.pomodoroshareapp.Login.AuthScreen
 import com.belltree.pomodoroshareapp.Login.AuthViewModel
 import com.belltree.pomodoroshareapp.Home.HomeScreen
+import com.belltree.pomodoroshareapp.MakeSpace.MakeSpaceScreen
 import com.belltree.pomodoroshareapp.Setting.SettingScreen
 import com.belltree.pomodoroshareapp.Setting.SettingViewModel
 
@@ -36,7 +37,14 @@ fun AppNavHost(modifier: Modifier = Modifier){
 
         composable("home") {
             HomeScreen(
-                onNavigateSettings = { navController.navigate("settings") }
+                onNavigateSettings = { navController.navigate("settings") },
+                onNavigateMakeSpace = { navController.navigate("make space") }
+            )
+        }
+
+        composable("make space") {
+            MakeSpaceScreen(
+                onNavigateHome = { navController.navigate("home") }
             )
         }
 
@@ -48,7 +56,8 @@ fun AppNavHost(modifier: Modifier = Modifier){
                     navController.navigate("login") {
                         popUpTo("settings") { inclusive = true }
                     }
-                }
+                },
+                onNavigateHome = { navController.navigate("home") }
             )
         }
 
