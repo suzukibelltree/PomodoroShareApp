@@ -9,8 +9,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.belltree.pomodoroshareapp.Login.AuthScreen
 import com.belltree.pomodoroshareapp.Login.AuthViewModel
 import com.belltree.pomodoroshareapp.Home.HomeScreen
+import com.belltree.pomodoroshareapp.MakeSpace.MakeSpaceScreen
+import com.belltree.pomodoroshareapp.Record.RecordScreen
 import com.belltree.pomodoroshareapp.Setting.SettingScreen
 import com.belltree.pomodoroshareapp.Setting.SettingViewModel
+import com.belltree.pomodoroshareapp.Space.SpaceScreen
 
 // 画面遷移をここで管理する
 @Composable
@@ -36,7 +39,28 @@ fun AppNavHost(modifier: Modifier = Modifier){
 
         composable("home") {
             HomeScreen(
-                onNavigateSettings = { navController.navigate("settings") }
+                onNavigateSettings = { navController.navigate("settings") },
+                onNavigateMakeSpace = { navController.navigate("make space") },
+                onNavigateRecord = { navController.navigate("record") },
+                onNavigateSpace = { navController.navigate("space") }
+            )
+        }
+
+        composable("make space") {
+            MakeSpaceScreen(
+                onNavigateHome = { navController.navigate("home") }
+            )
+        }
+
+        composable("record") {
+            RecordScreen(
+                onNavigateHome = { navController.navigate("home") }
+            )
+        }
+
+        composable("space") {
+            SpaceScreen(
+                onNavigateHome = { navController.navigate("home") }
             )
         }
 
@@ -48,7 +72,8 @@ fun AppNavHost(modifier: Modifier = Modifier){
                     navController.navigate("login") {
                         popUpTo("settings") { inclusive = true }
                     }
-                }
+                },
+                onNavigateHome = { navController.navigate("home") }
             )
         }
 

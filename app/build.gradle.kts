@@ -57,14 +57,15 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.material.icons.extended)
     // DataStore (Preferences)
     implementation(libs.androidx.datastore.preferences)
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
-    // For firebase
-    implementation(libs.firebase.bom)
+    // For firebase (BOM でバージョン一括管理)
+    implementation(platform(libs.firebase.bom))
     // For firestore
     implementation(libs.firebase.firestore)
     // For firebase auth
