@@ -48,10 +48,9 @@ class HomeViewModel(
     fun refresh() = load()
 
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun createSpace(space: Space) {
         viewModelScope.launch {
-            val result = spaceRepository.createSpace(space)
+            spaceRepository.createSpace(space)
         }
     }
 }
