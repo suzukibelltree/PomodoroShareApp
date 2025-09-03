@@ -2,19 +2,24 @@ package com.belltree.pomodoroshareapp.Login
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.belltree.pomodoroshareapp.domain.repository.AuthRepository
+import com.belltree.pomodoroshareapp.domain.repository.AuthRepositoryImpl
 import com.belltree.pomodoroshareapp.domain.repository.UserRepository
 import com.google.firebase.auth.FirebaseUser
 import androidx.compose.runtime.State
 import com.belltree.pomodoroshareapp.domain.models.User
+import com.belltree.pomodoroshareapp.domain.repository.UserRepositoryImpl
+import kotlinx.coroutines.launch
 
 
 /**
  * 認証関連の状態と操作を管理するViewModel
  * UI側ではcurrentUserとauthStateを監視し、認証操作を呼び出す
  */
-class AuthViewModel(internal val repository: AuthRepository = AuthRepository()) : ViewModel() {
-
+class AuthViewModel(
+    internal val repository: AuthRepository = AuthRepositoryImpl()
+) : ViewModel() {
     // 現在ログインしているユーザー
     private val _currentUser = mutableStateOf<FirebaseUser?>(repository.getCurrentUser())
     val currentUser: State<FirebaseUser?> = _currentUser
@@ -27,7 +32,7 @@ class AuthViewModel(internal val repository: AuthRepository = AuthRepository()) 
     private val _isNewUser = mutableStateOf(false)
     val isNewUser: State<Boolean> = _isNewUser
 
-    val userRepository = UserRepository()
+    val userRepository: UserRepository = UserRepositoryImpl()
 
     // 匿名認証を行う関数
     fun signInAnonymously() {
@@ -37,9 +42,11 @@ class AuthViewModel(internal val repository: AuthRepository = AuthRepository()) 
             if (success) {
                 _currentUser.value = repository.getCurrentUser()
                 _currentUser.value?.let { user ->
-                    userRepository.addUserToFirestore(
-                        User(userId = user.uid, userName = user.displayName ?: "Guest User")
-                    )
+                    viewModelScope.launch {
+                        userRepository.addUserToFirestore(
+                            User(userId = user.uid, userName = user.displayName ?: "Guest User")
+                        )
+                    }
                 }
             } else {
                 _errorMessage.value = "匿名認証に失敗しました: $error"
@@ -52,9 +59,11 @@ class AuthViewModel(internal val repository: AuthRepository = AuthRepository()) 
         _errorMessage.value = null
 
         // Firestore にユーザーを追加
-        userRepository.addUserToFirestore(
-            User(userId = user?.uid ?: "", userName = user?.displayName ?: "Guest User")
-        )
+        viewModelScope.launch {
+            userRepository.addUserToFirestore(
+                User(userId = user?.uid ?: "", userName = user?.displayName ?: "Guest User")
+            )
+        }
     }
 
     fun onLoginFailed(message: String) {
