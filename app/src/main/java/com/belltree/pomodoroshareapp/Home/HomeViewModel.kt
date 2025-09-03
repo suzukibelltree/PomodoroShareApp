@@ -1,72 +1,61 @@
 package com.belltree.pomodoroshareapp.Home
-//
-//import android.os.Build
-//import androidx.annotation.RequiresApi
-//import androidx.lifecycle.ViewModel
-//import androidx.lifecycle.ViewModelProvider
-//import androidx.lifecycle.viewModelScope
-//import com.belltree.pomodoroshareapp.domain.models.SpaceCreateRequest
-//import com.belltree.pomodoroshareapp.domain.models.Space
-//import com.belltree.pomodoroshareapp.domain.repository.SpaceRepositoryImpl
-//import kotlinx.coroutines.launch
-//import kotlinx.coroutines.flow.MutableStateFlow
-//import kotlinx.coroutines.flow.StateFlow
-//import kotlinx.coroutines.flow.asStateFlow
-//
-//class HomeViewModel(
-//    private val spaceRepository: SpaceRepositoryImpl
-//) : ViewModel() {
-//    private val _spaces = MutableStateFlow<List<Space>>(emptyList())
-//    val spaces: StateFlow<List<Space>> = _spaces
-//
-//    fun getSpaces(): List<Space> {
-//        return spaceRepository.spaces.value
-//    }
-//
-//    private val _isLoading = MutableStateFlow(false)
-//    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-//
-//    fun load() {
-//        if (_isLoading.value) return
-//        viewModelScope.launch {
-//            _isLoading.value = true
-//            spaceRepository.getAll().onSuccess { list ->
-//                _spaces.value = list
-//            }.onFailure {
-//                // TODO: error handling (log/report)
-//            }
-//            _isLoading.value = false
-//        }
-//    }
-//
-//    fun refresh() = load()
-//
-//    fun getAllSpaces() {
-//        viewModelScope.launch {
-//            val result = spaceRepository.getAll()
-//            result.onSuccess { response ->
-//                println("投稿一覧取得成功: $response")
-//
-//            }.onFailure { e ->
-//                println("エラー: ${e.message}")
-//            }
-//        }
-//    }
-//
-//    @RequiresApi(Build.VERSION_CODES.O)
-//    fun createSpace(space: SpaceCreateRequest) {
-//        viewModelScope.launch {
-//            val result = spaceRepository.create(space)
-//            result.onSuccess { response ->
-//                println("投稿成功: $response")
-//            }.onFailure { e ->
-//                println("エラー: ${e.message}")
-//            }
-//        }
-//    }
-//}
-//
-//
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.belltree.pomodoroshareapp.domain.models.Space
+import com.belltree.pomodoroshareapp.domain.repository.SpaceRepositoryImpl
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+class HomeViewModel(
+    private val spaceRepository: SpaceRepositoryImpl
+) : ViewModel() {
+    private val _spaces = MutableStateFlow<List<Space>>(emptyList())
+    val spaces: StateFlow<List<Space>> = _spaces
+
+    // 個別取得用の選択中スペース
+    private val _selectedSpace = MutableStateFlow<Space?>(null)
+    val selectedSpace: StateFlow<Space?> = _selectedSpace
+
+    suspend fun getUnfinishedSpaces(): List<Space> {
+        _spaces.value = spaceRepository.getUnfinishedSpaces()
+        return _spaces.value
+    }
+
+    suspend fun getSpaceById(spaceId: String): Space? {
+        val space = spaceRepository.getSpaceById(spaceId)
+        _selectedSpace.value = space
+        return space
+    }
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    fun load() {
+        if (_isLoading.value) return
+        viewModelScope.launch {
+            _isLoading.value = true
+            _spaces.value = spaceRepository.getUnfinishedSpaces()
+            _isLoading.value = false
+        }
+    }
+
+    fun refresh() = load()
+
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun createSpace(space: Space) {
+        viewModelScope.launch {
+            val result = spaceRepository.createSpace(space)
+        }
+    }
+}
+
 //class SpaceViewModelFactory(private val spaceRepository: SpaceRepositoryImpl) : ViewModelProvider.Factory {
 //    override fun <T : ViewModel> create(modelClass: Class<T>): T {
 //        if (modelClass.isAssignableFrom(SpaceViewModel::class.java)) {
