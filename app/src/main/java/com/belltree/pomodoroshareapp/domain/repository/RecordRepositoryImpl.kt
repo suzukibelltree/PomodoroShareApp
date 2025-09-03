@@ -17,7 +17,7 @@ class RecordRepositoryImpl: RecordRepository {
         return snapshot.documents.mapNotNull { it.toObject(Record::class.java) }
     }
 
-    override fun addRecord(record: Record): Unit {
+    override fun addRecord(record: Record) {
         db.collection("records").add(record)
     }
 

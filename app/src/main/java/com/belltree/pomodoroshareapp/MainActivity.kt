@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
     private val settingViewModel: SettingViewModel by viewModels{
         SettingViewModelFactory(SettingRepositoryImpl())
     }
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
