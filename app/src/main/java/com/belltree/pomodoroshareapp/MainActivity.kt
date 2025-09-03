@@ -9,7 +9,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import com.belltree.pomodoroshareapp.Login.AuthViewModel
+import com.belltree.pomodoroshareapp.Login.AuthViewModelFactory
 import com.belltree.pomodoroshareapp.domain.repository.AuthRepositoryImpl
+import com.belltree.pomodoroshareapp.domain.repository.UserRepositoryImpl
 import com.belltree.pomodoroshareapp.ui.theme.PomodoroShareAppTheme
 
 object AppContextHolder {
@@ -21,7 +24,7 @@ object AppContextHolder {
 
 class MainActivity : ComponentActivity() {
     private val authViewModel: AuthViewModel by viewModels{
-        AuthViewModelFactory(AuthRepositoryImpl())
+        AuthViewModelFactory(AuthRepositoryImpl(), UserRepositoryImpl())
     }
     private val makeSpaceViewModel: MakeSpaceViewModel by viewModels{
         MakeSpaceViewModelFactory(MakeSpaceRepositoryImpl())

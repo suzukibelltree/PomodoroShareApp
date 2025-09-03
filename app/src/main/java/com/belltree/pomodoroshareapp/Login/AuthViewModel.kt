@@ -3,10 +3,14 @@ package com.belltree.pomodoroshareapp.Login
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.belltree.pomodoroshareapp.Space.SpaceViewModel
 import com.belltree.pomodoroshareapp.domain.models.User
 import com.belltree.pomodoroshareapp.domain.repository.AuthRepository
 import com.belltree.pomodoroshareapp.domain.repository.AuthRepositoryImpl
+import com.belltree.pomodoroshareapp.domain.repository.RecordRepositoryImpl
+import com.belltree.pomodoroshareapp.domain.repository.SpaceRepositoryImpl
 import com.belltree.pomodoroshareapp.domain.repository.UserRepository
 import com.belltree.pomodoroshareapp.domain.repository.UserRepositoryImpl
 import com.google.firebase.auth.FirebaseUser
@@ -17,10 +21,12 @@ import kotlinx.coroutines.launch
  * 認証関連の状態と操作を管理するViewModel
  * UI側ではcurrentUserとauthStateを監視し、認証操作を呼び出す
  */
-class AuthViewModel : ViewModel() {
+class AuthViewModel(
+    private val authRepository: AuthRepositoryImpl,
+    private val userRepository: UserRepositoryImpl
+) : ViewModel(
+) {
     // DI 未導入のため内部生成（将来 Hilt へ移行予定）
-    private val authRepository: AuthRepository = AuthRepositoryImpl()
-    private val userRepository: UserRepository = UserRepositoryImpl()
     // 現在ログインしているユーザー
     private val _currentUser = mutableStateOf<FirebaseUser?>(authRepository.getCurrentUser())
     val currentUser: State<FirebaseUser?> = _currentUser
@@ -93,6 +99,14 @@ class AuthViewModel : ViewModel() {
     _isNewUser.value = false
     _errorMessage.value = null
     }
-
 }
 
+class AuthViewModelFactory(private val authRepository: AuthRepositoryImpl, private val userRepository: UserRepositoryImpl) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(SpaceViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return AuthViewModel(authRepository, userRepository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
