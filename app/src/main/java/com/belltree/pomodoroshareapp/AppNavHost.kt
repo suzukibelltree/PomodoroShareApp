@@ -76,7 +76,7 @@ fun AppNavHost(
 
         composable("settings") {
             SettingScreen(
-                viewModel = SettingViewModel(),
+                settingViewModel = settingViewModel,
                 onSignOut = {
                     authViewModel.signOut()
                     navController.navigate("login") {

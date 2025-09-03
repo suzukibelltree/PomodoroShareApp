@@ -19,7 +19,7 @@ import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 @Composable
 fun SettingScreen(
     modifier: Modifier = Modifier,
-    viewModel: SettingViewModel,
+    settingViewModel: SettingViewModel,
     onSignOut: () -> Unit,
     onNavigateHome: () -> Unit = {}
 ) {

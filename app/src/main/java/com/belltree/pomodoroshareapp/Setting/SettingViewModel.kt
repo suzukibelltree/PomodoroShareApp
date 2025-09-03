@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.belltree.pomodoroshareapp.Space.SpaceViewModel
 import com.belltree.pomodoroshareapp.domain.models.User
 import com.belltree.pomodoroshareapp.domain.repository.AuthRepositoryImpl
 import com.belltree.pomodoroshareapp.domain.repository.UserRepositoryImpl
@@ -41,7 +40,7 @@ class SettingViewModel(
 
 class SettingViewModelFactory(private val authRepository: AuthRepositoryImpl) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(SpaceViewModel::class.java)) {
+    if (modelClass.isAssignableFrom(SettingViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
             return SettingViewModel(authRepository) as T
         }

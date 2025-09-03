@@ -5,7 +5,6 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.belltree.pomodoroshareapp.Space.SpaceViewModel
 import com.belltree.pomodoroshareapp.domain.models.Space
 import com.belltree.pomodoroshareapp.domain.repository.SpaceRepositoryImpl
 import kotlinx.coroutines.launch
@@ -56,13 +55,13 @@ class HomeViewModel(
     }
 }
 
-//class SpaceViewModelFactory(private val spaceRepository: SpaceRepositoryImpl) : ViewModelProvider.Factory {
-//    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-//        if (modelClass.isAssignableFrom(SpaceViewModel::class.java)) {
-//            @Suppress("UNCHECKED_CAST")
-//            return SpaceViewModel(spaceRepository) as T
-//        }
-//        throw IllegalArgumentException("Unknown ViewModel class")
-//    }
-//}
+class HomeViewModelFactory(private val spaceRepository: SpaceRepositoryImpl) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+    if (modelClass.isAssignableFrom(HomeViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return HomeViewModel(spaceRepository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
 

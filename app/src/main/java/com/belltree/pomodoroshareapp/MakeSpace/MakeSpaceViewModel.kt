@@ -5,8 +5,6 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.belltree.pomodoroshareapp.Login.AuthViewModel
-import com.belltree.pomodoroshareapp.Space.SpaceViewModel
 import com.belltree.pomodoroshareapp.domain.models.Space
 import com.belltree.pomodoroshareapp.domain.repository.AuthRepositoryImpl
 import com.belltree.pomodoroshareapp.domain.repository.SpaceRepositoryImpl
@@ -26,11 +24,11 @@ class MakeSpaceViewModel(
     }
 }
 
-class MakeSpaceViewModelFactory(private val makeSpaceRepository: SpaceRepositoryImpl) : ViewModelProvider.Factory {
+class MakeSpaceViewModelFactory(private val spaceRepository: SpaceRepositoryImpl) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(SpaceViewModel::class.java)) {
+    if (modelClass.isAssignableFrom(MakeSpaceViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return MakeSpaceViewModel(makeSpaceRepository) as T
+            return MakeSpaceViewModel(spaceRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

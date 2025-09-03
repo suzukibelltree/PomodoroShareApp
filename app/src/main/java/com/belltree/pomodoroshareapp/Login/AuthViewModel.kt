@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.belltree.pomodoroshareapp.Space.SpaceViewModel
 import com.belltree.pomodoroshareapp.domain.models.User
 import com.belltree.pomodoroshareapp.domain.repository.AuthRepository
 import com.belltree.pomodoroshareapp.domain.repository.AuthRepositoryImpl
@@ -101,12 +100,15 @@ class AuthViewModel(
     }
 }
 
-class AuthViewModelFactory(private val authRepository: AuthRepositoryImpl, private val userRepository: UserRepositoryImpl) : ViewModelProvider.Factory {
+class AuthViewModelFactory(
+    private val authRepository: AuthRepositoryImpl,
+    private val userRepository: UserRepositoryImpl
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(SpaceViewModel::class.java)) {
+        if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
             return AuthViewModel(authRepository, userRepository) as T
         }
-        throw IllegalArgumentException("Unknown ViewModel class")
+        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
 }
