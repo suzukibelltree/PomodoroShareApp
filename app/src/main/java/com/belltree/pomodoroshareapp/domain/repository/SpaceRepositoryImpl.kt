@@ -3,12 +3,14 @@ package com.belltree.pomodoroshareapp.domain.repository
 import com.belltree.pomodoroshareapp.domain.models.Space
 import com.belltree.pomodoroshareapp.domain.models.SpaceState
 import com.google.firebase.Firebase
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
-class SpaceRepositoryImpl : SpaceRepository{
+class SpaceRepositoryImpl : SpaceRepository {
     val db = Firebase.firestore
 
     // まだ終了していない部屋の一覧をFirestoreから取得する(HomeViewModelで使用)
@@ -21,7 +23,7 @@ class SpaceRepositoryImpl : SpaceRepository{
     }
 
     // 新しい部屋を作成する(MakeSpaceViewModelで使用)
-    override fun createSpace(space: Space){
+    override fun createSpace(space: Space) {
         db.collection("spaces").add(space)
     }
 
@@ -29,5 +31,27 @@ class SpaceRepositoryImpl : SpaceRepository{
     override suspend fun getSpaceById(spaceId: String): Space? {
         val snapshot = db.collection("spaces").document(spaceId).get().await()
         return snapshot.toObject(Space::class.java)
+    }
+
+    // 部屋画面遷移時に自分のユーザーIDを参加者リストに追加する(SpaceViewModelで使用)
+    override fun addMyUserInfoToSpace(spaceId: String, userId: String) {
+        val spaceRef = db.collection("spaces").document(spaceId)
+        spaceRef.update("participantsId", FieldValue.arrayUnion(userId))
+    }
+
+    // 部屋に参加中のユーザーのIDリストを監視する(SpaceViewModelで使用)
+    override fun observeSpace(spaceId: String): Flow<Space> = callbackFlow<Space> {
+        val listener = db.collection("spaces")
+            .document(spaceId)
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    close(e)
+                    return@addSnapshotListener
+                }
+                snapshot?.toObject(Space::class.java)?.let { space ->
+                    trySend(space)
+                }
+            }
+        awaitClose { listener.remove() }
     }
 }
