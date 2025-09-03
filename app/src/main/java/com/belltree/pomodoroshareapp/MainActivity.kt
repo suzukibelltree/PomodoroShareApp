@@ -6,26 +6,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.belltree.pomodoroshareapp.Home.HomeViewModel
-import com.belltree.pomodoroshareapp.Home.HomeViewModelFactory
-import com.belltree.pomodoroshareapp.Login.AuthViewModel
-import com.belltree.pomodoroshareapp.Login.AuthViewModelFactory
-import com.belltree.pomodoroshareapp.MakeSpace.MakeSpaceViewModel
-import com.belltree.pomodoroshareapp.MakeSpace.MakeSpaceViewModelFactory
-import com.belltree.pomodoroshareapp.Record.RecordViewModel
-import com.belltree.pomodoroshareapp.Record.RecordViewModelFactory
-import com.belltree.pomodoroshareapp.Setting.SettingViewModel
-import com.belltree.pomodoroshareapp.Setting.SettingViewModelFactory
-import com.belltree.pomodoroshareapp.Space.SpaceViewModel
-import com.belltree.pomodoroshareapp.Space.SpaceViewModelFactory
-import com.belltree.pomodoroshareapp.domain.repository.AuthRepositoryImpl
-import com.belltree.pomodoroshareapp.domain.repository.RecordRepositoryImpl
-import com.belltree.pomodoroshareapp.domain.repository.SpaceRepositoryImpl
-import com.belltree.pomodoroshareapp.domain.repository.UserRepositoryImpl
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.belltree.pomodoroshareapp.ui.theme.PomodoroShareAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -38,25 +22,6 @@ object AppContextHolder {
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val authViewModel: AuthViewModel by viewModels {
-        AuthViewModelFactory(AuthRepositoryImpl(), UserRepositoryImpl())
-    }
-    private val homeViewModel: HomeViewModel by viewModels {
-        HomeViewModelFactory(SpaceRepositoryImpl())
-    }
-    private val makeSpaceViewModel: MakeSpaceViewModel by viewModels {
-        MakeSpaceViewModelFactory(SpaceRepositoryImpl())
-    }
-    private val recordViewModel: RecordViewModel by viewModels {
-        RecordViewModelFactory(RecordRepositoryImpl())
-    }
-    private val spaceViewModel: SpaceViewModel by viewModels {
-        SpaceViewModelFactory(SpaceRepositoryImpl(), RecordRepositoryImpl())
-    }
-    private val settingViewModel: SettingViewModel by viewModels {
-        SettingViewModelFactory(AuthRepositoryImpl())
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -64,12 +29,12 @@ class MainActivity : ComponentActivity() {
             PomodoroShareAppTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     AppNavHost(
-                        authViewModel = authViewModel,
-                        makeSpaceViewModel = makeSpaceViewModel,
-                        recordViewModel = recordViewModel,
-                        spaceViewModel = spaceViewModel,
-                        settingViewModel = settingViewModel,
-                        homeViewModel = homeViewModel
+                        authViewModel = hiltViewModel(),
+                        makeSpaceViewModel = hiltViewModel(),
+                        recordViewModel = hiltViewModel(),
+                        spaceViewModel = hiltViewModel(),
+                        settingViewModel = hiltViewModel(),
+                        homeViewModel = hiltViewModel()
                     )
                 }
             }

@@ -2,12 +2,13 @@ package com.belltree.pomodoroshareapp.domain.repository
 
 import android.util.Log
 import com.belltree.pomodoroshareapp.domain.models.User
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.FirebaseFirestore
+import jakarta.inject.Inject
 import kotlinx.coroutines.tasks.await
 
-class UserRepositoryImpl : UserRepository{
-    private val db = Firebase.firestore
+class UserRepositoryImpl @Inject constructor(
+    private val db: FirebaseFirestore
+) : UserRepository {
 
     override suspend fun addUserToFirestore(user: User) {
         try {

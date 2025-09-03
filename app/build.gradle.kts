@@ -84,6 +84,7 @@ dependencies {
     // For Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

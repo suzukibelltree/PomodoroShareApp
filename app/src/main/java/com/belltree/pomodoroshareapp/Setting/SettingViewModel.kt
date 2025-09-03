@@ -3,16 +3,14 @@ package com.belltree.pomodoroshareapp.Setting
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
-import com.belltree.pomodoroshareapp.domain.models.User
-import com.belltree.pomodoroshareapp.domain.repository.AuthRepositoryImpl
-import com.belltree.pomodoroshareapp.domain.repository.UserRepositoryImpl
+import com.belltree.pomodoroshareapp.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseUser
-import kotlinx.coroutines.launch
+import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
 
-class SettingViewModel(
-    private val authRepository: AuthRepositoryImpl,
+@HiltViewModel
+class SettingViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
 ) : ViewModel(
 ) {
     // DI 未導入のため内部生成（将来 Hilt へ移行予定）
@@ -35,15 +33,5 @@ class SettingViewModel(
         _currentUser.value = null
         _isNewUser.value = false
         _errorMessage.value = null
-    }
-}
-
-class SettingViewModelFactory(private val authRepository: AuthRepositoryImpl) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-    if (modelClass.isAssignableFrom(SettingViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return SettingViewModel(authRepository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

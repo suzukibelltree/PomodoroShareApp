@@ -1,19 +1,22 @@
 package com.belltree.pomodoroshareapp.Space
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.belltree.pomodoroshareapp.domain.models.Record
 import com.belltree.pomodoroshareapp.domain.models.Space
-import com.belltree.pomodoroshareapp.domain.repository.RecordRepositoryImpl
-import com.belltree.pomodoroshareapp.domain.repository.SpaceRepositoryImpl
+import com.belltree.pomodoroshareapp.domain.repository.RecordRepository
+import com.belltree.pomodoroshareapp.domain.repository.SpaceRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-class SpaceViewModel(
-    private val recordRepository: RecordRepositoryImpl,
-    private val spaceRepository: SpaceRepositoryImpl
+
+@HiltViewModel
+class SpaceViewModel @Inject constructor(
+    private val recordRepository: RecordRepository,
+    private val spaceRepository: SpaceRepository
 ) : ViewModel() {
     private val _records = MutableStateFlow<List<Record>>(emptyList())
     val records: StateFlow<List<Record>> = _records
@@ -39,19 +42,19 @@ class SpaceViewModel(
         }
     }
 
-    fun createSpace(space: Space){
+    fun createSpace(space: Space) {
         viewModelScope.launch {
             spaceRepository.createSpace(space)
         }
     }
 
-    fun addMyUserInfoToSpace(spaceId: String, userId: String){
+    fun addMyUserInfoToSpace(spaceId: String, userId: String) {
         viewModelScope.launch {
             spaceRepository.addMyUserInfoToSpace(spaceId, userId)
         }
     }
 
-    fun observeSpace(spaceId: String){
+    fun observeSpace(spaceId: String) {
         // 既存の監視をキャンセルしてから新しい Flow を収集
         viewModelScope.launch {
             spaceRepository.observeSpace(spaceId)
@@ -59,16 +62,5 @@ class SpaceViewModel(
                     _space.value = latest
                 }
         }
-    }
-}
-
-
-class SpaceViewModelFactory(private val spaceRepository: SpaceRepositoryImpl, private val recordRepository: RecordRepositoryImpl) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(SpaceViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return SpaceViewModel(recordRepository,spaceRepository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
