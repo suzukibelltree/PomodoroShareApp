@@ -1,15 +1,15 @@
 package com.belltree.pomodoroshareapp.Login
 
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.belltree.pomodoroshareapp.domain.models.User
 import com.belltree.pomodoroshareapp.domain.repository.AuthRepository
 import com.belltree.pomodoroshareapp.domain.repository.AuthRepositoryImpl
 import com.belltree.pomodoroshareapp.domain.repository.UserRepository
-import com.google.firebase.auth.FirebaseUser
-import androidx.compose.runtime.State
-import com.belltree.pomodoroshareapp.domain.models.User
 import com.belltree.pomodoroshareapp.domain.repository.UserRepositoryImpl
+import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.launch
 
 
@@ -17,11 +17,12 @@ import kotlinx.coroutines.launch
  * 認証関連の状態と操作を管理するViewModel
  * UI側ではcurrentUserとauthStateを監視し、認証操作を呼び出す
  */
-class AuthViewModel(
-    internal val repository: AuthRepository = AuthRepositoryImpl()
-) : ViewModel() {
+class AuthViewModel : ViewModel() {
+    // DI 未導入のため内部生成（将来 Hilt へ移行予定）
+    private val authRepository: AuthRepository = AuthRepositoryImpl()
+    private val userRepository: UserRepository = UserRepositoryImpl()
     // 現在ログインしているユーザー
-    private val _currentUser = mutableStateOf<FirebaseUser?>(repository.getCurrentUser())
+    private val _currentUser = mutableStateOf<FirebaseUser?>(authRepository.getCurrentUser())
     val currentUser: State<FirebaseUser?> = _currentUser
 
     private val _isLoading = mutableStateOf(false)
@@ -29,18 +30,17 @@ class AuthViewModel(
 
     private val _errorMessage = mutableStateOf<String?>(null)
     val errorMessage: State<String?> = _errorMessage
+
     private val _isNewUser = mutableStateOf(false)
     val isNewUser: State<Boolean> = _isNewUser
-
-    val userRepository: UserRepository = UserRepositoryImpl()
 
     // 匿名認証を行う関数
     fun signInAnonymously() {
         _isLoading.value = true
-        repository.signInAnonymously { success, error ->
+        authRepository.signInAnonymously { success, error ->
             _isLoading.value = false
             if (success) {
-                _currentUser.value = repository.getCurrentUser()
+                _currentUser.value = authRepository.getCurrentUser()
                 _currentUser.value?.let { user ->
                     viewModelScope.launch {
                         userRepository.addUserToFirestore(
@@ -74,14 +74,11 @@ class AuthViewModel(
     // Google サインイン（ID Token を受け取りFirebase認証）
     fun signInWithGoogle(idToken: String) {
         _isLoading.value = true
-        repository.signInWithGoogle(idToken) { success, isNew, error ->
+        authRepository.signInWithGoogle(idToken) { success, isNew, error ->
             _isLoading.value = false
             if (success) {
                 _isNewUser.value = isNew
-                onLoginSuccess(repository.getCurrentUser())
-                if (isNew) {
-                    // 追加の初期化処理など必要ならここで実施
-                }
+                onLoginSuccess(authRepository.getCurrentUser())
             } else {
                 onLoginFailed(error ?: "Googleサインインに失敗しました")
             }
@@ -91,8 +88,10 @@ class AuthViewModel(
 
     // サインアウトを行う関数
     fun signOut() {
-        repository.signOut()
-        _currentUser.value = null
+    authRepository.signOut()
+    _currentUser.value = null
+    _isNewUser.value = false
+    _errorMessage.value = null
     }
 
 }
