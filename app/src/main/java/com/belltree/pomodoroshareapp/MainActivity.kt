@@ -9,7 +9,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.belltree.pomodoroshareapp.ui.theme.PomodoroShareAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -28,14 +27,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             PomodoroShareAppTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    AppNavHost(
-                        authViewModel = hiltViewModel(),
-                        makeSpaceViewModel = hiltViewModel(),
-                        recordViewModel = hiltViewModel(),
-                        spaceViewModel = hiltViewModel(),
-                        settingViewModel = hiltViewModel(),
-                        homeViewModel = hiltViewModel()
-                    )
+                    AppNavHost()
                 }
             }
         }
