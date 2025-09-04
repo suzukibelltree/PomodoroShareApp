@@ -48,6 +48,7 @@ fun AppNavHost(
 
         composable("home") {
             HomeScreen(
+                spaceViewModel = spaceViewModel,
                 onNavigateSettings = { navController.navigate("settings") },
                 onNavigateMakeSpace = { navController.navigate("make space") },
                 onNavigateRecord = { navController.navigate("record") },
