@@ -23,6 +23,8 @@ import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 
 /**
  * Googleサインイン + 匿名ログイン UI
@@ -42,8 +44,10 @@ fun AuthScreen(
 	val activity = context as? Activity
 	val snackbarHostState = remember { SnackbarHostState() }
 
-	// Google One Tap Client
-	val oneTapClient = remember { Identity.getSignInClient(context) }
+	// Google Play services availability (avoid initializing Identity client when unavailable)
+	val hasPlayServices = remember {
+		GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS
+	}
 	val signInRequest = remember {
 		BeginSignInRequest.Builder()
 			.setGoogleIdTokenRequestOptions(
@@ -65,7 +69,7 @@ fun AuthScreen(
 		launching = false
 		if (result.resultCode == Activity.RESULT_OK) {
 			try {
-				val credential = oneTapClient.getSignInCredentialFromIntent(result.data)
+				val credential = Identity.getSignInClient(context).getSignInCredentialFromIntent(result.data)
 				val idToken = credential.googleIdToken
 				if (idToken != null) {
 					viewModel.signInWithGoogle(idToken)
@@ -103,9 +107,11 @@ fun AuthScreen(
 			)
 			Spacer(Modifier.height(32.dp))
 
-			Button(enabled = !isLoading && !launching, onClick = {
+			Button(enabled = !isLoading && !launching && hasPlayServices, onClick = {
 				if (activity == null) return@Button
 				launching = true
+				// Initialize client only when needed and when Play services are available
+				val oneTapClient = Identity.getSignInClient(context)
 				oneTapClient.beginSignIn(signInRequest)
 					.addOnSuccessListener(activity) { result ->
 						val request = IntentSenderRequest.Builder(result.pendingIntent.intentSender).build()
@@ -130,6 +136,10 @@ fun AuthScreen(
 					}
 			}) {
 				Text("Googleでサインイン")
+			}
+			if (!hasPlayServices) {
+				Spacer(Modifier.height(8.dp))
+				Text("Google Play 開発者サービスが利用できない端末です", style = MaterialTheme.typography.bodySmall)
 			}
 			Spacer(Modifier.height(12.dp))
 			Button(enabled = !isLoading, onClick = { viewModel.signInAnonymously() }) {

@@ -11,6 +11,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
@@ -20,6 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.belltree.pomodoroshareapp.Login.AuthViewModel
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 import com.belltree.pomodoroshareapp.domain.models.Space
 import com.belltree.pomodoroshareapp.MakeSpace.MakeSpaceViewModel
@@ -42,12 +44,15 @@ import com.belltree.pomodoroshareapp.domain.repository.SpaceRepositoryImpl
 fun MakeSpaceScreen(
     modifier: Modifier = Modifier,
     makeSpaceViewModel: MakeSpaceViewModel,
+    authViewModel: AuthViewModel,
     onNavigateHome: () -> Unit = {}
 ) {
     var roomName by remember { mutableStateOf("") }
     var startMinutesText by remember { mutableStateOf("") } // 分単位入力
     var error by remember { mutableStateOf<String?>(null) }
     var isPrivate by remember { mutableStateOf(false) }
+
+    val user = authViewModel.currentUser
 
     Scaffold(
         topBar = {
@@ -102,8 +107,12 @@ fun MakeSpaceScreen(
                     val startTime = if (minutes > 0) System.currentTimeMillis() + minutes * 60_000 else System.currentTimeMillis()
                     makeSpaceViewModel.createSpace(
                         Space(
+                            spaceId = "",
                             spaceName = roomName,
+                            ownerId = user.value?.uid ?: "",
                             startTime = startTime,
+                            sessionCount = 0,
+                            participantsId = emptyList(),
                             createdAt = System.currentTimeMillis(),
                             lastUpdated = System.currentTimeMillis(),
                             isPrivate = isPrivate

@@ -59,6 +59,7 @@ fun AppNavHost(
         composable("make space") {
             MakeSpaceScreen(
                 makeSpaceViewModel = makeSpaceViewModel,
+                authViewModel = authViewModel,
                 onNavigateHome = { navController.navigate("home") }
             )
         }
