@@ -2,16 +2,17 @@ package com.belltree.pomodoroshareapp.domain.repository
 
 import com.belltree.pomodoroshareapp.domain.models.Space
 import com.belltree.pomodoroshareapp.domain.models.SpaceState
-import com.google.firebase.Firebase
 import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.FirebaseFirestore
+import jakarta.inject.Inject
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
-class SpaceRepositoryImpl : SpaceRepository {
-    val db = Firebase.firestore
+class SpaceRepositoryImpl @Inject constructor(
+    val db: FirebaseFirestore
+) : SpaceRepository {
 
     // まだ終了していない部屋の一覧をFirestoreから取得する(HomeViewModelで使用)
     override suspend fun getUnfinishedSpaces(): List<Space> {

@@ -1,12 +1,13 @@
 package com.belltree.pomodoroshareapp.domain.repository
 
 import com.belltree.pomodoroshareapp.domain.models.Record
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.FirebaseFirestore
+import jakarta.inject.Inject
 import kotlinx.coroutines.tasks.await
 
-class RecordRepositoryImpl: RecordRepository {
-    val db = Firebase.firestore
+class RecordRepositoryImpl @Inject constructor(
+    val db: FirebaseFirestore
+) : RecordRepository {
 
     // そのユーザーの全レコードを取得(RecordViewModelで使用する)
     override suspend fun getAllRecords(userId: String): List<Record> {

@@ -2,14 +2,15 @@ package com.belltree.pomodoroshareapp.domain.repository
 
 import android.util.Log
 import com.belltree.pomodoroshareapp.domain.models.Comment
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.FirebaseFirestore
+import jakarta.inject.Inject
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
-class CommentRepositoryImpl : CommentRepository {
-    val db = Firebase.firestore
+class CommentRepositoryImpl @Inject constructor(
+    val db: FirebaseFirestore
+) : CommentRepository {
 
     // 自分が参加している部屋にコメントを追加する(SpaceViewModelで使用する)
     override fun addComment(spaceId: String, comment: Comment) {

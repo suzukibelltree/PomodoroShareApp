@@ -1,16 +1,14 @@
 package com.belltree.pomodoroshareapp.domain.repository
 
-import android.util.Log
-import com.belltree.pomodoroshareapp.domain.models.User
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.firestore.firestore
+import jakarta.inject.Inject
 
-class AuthRepositoryImpl : AuthRepository{
+class AuthRepositoryImpl @Inject constructor(
+    private val firebaseAuth: FirebaseAuth,
+) : AuthRepository {
 
-    private val firebaseAuth = FirebaseAuth.getInstance()
     // 現在のユーザーを取得する関数
     override fun getCurrentUser(): FirebaseUser? = firebaseAuth.currentUser
 
@@ -39,6 +37,7 @@ class AuthRepositoryImpl : AuthRepository{
                 else onResult(false, task.exception?.message)
             }
     }
+
     // サインアウトを行う関数
     override fun signOut() {
         firebaseAuth.signOut()
