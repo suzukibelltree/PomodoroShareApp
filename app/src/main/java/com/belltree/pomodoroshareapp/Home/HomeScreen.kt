@@ -35,17 +35,17 @@ import kotlin.String
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-	spaceViewModel: SpaceViewModel,
+	homeViewModel: HomeViewModel,
     onNavigateSettings: () -> Unit = {},
     onNavigateMakeSpace: () -> Unit = {},
     onNavigateRecord: () -> Unit = {},
 	onNavigateSpace: (String) -> Unit = {}
 ) {
 
-	val spaces by spaceViewModel.spaces.collectAsState()
-	LaunchedEffect(spaceViewModel, spaces.isEmpty()){
+	val spaces by homeViewModel.spaces.collectAsState()
+	LaunchedEffect(homeViewModel, spaces.isEmpty()){
 		if(spaces.isEmpty()){
-			spaceViewModel.getUnfinishedSpaces()
+			homeViewModel.getUnfinishedSpaces()
 		}
 	}
 	Scaffold(

@@ -10,9 +10,6 @@ import androidx.navigation.compose.composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import com.belltree.pomodoroshareapp.Login.AuthScreen
-import com.belltree.pomodoroshareapp.Login.AuthViewModel
-import androidx.navigation.compose.rememberNavController
 import com.belltree.pomodoroshareapp.Home.HomeScreen
 import com.belltree.pomodoroshareapp.Home.HomeViewModel
 import com.belltree.pomodoroshareapp.Login.AuthScreen
@@ -50,7 +47,7 @@ fun AppNavHost() {
         composable("home") {
             val viewModel: HomeViewModel = hiltViewModel()
             HomeScreen(
-                spaceViewModel = spaceViewModel,
+                homeViewModel = viewModel,
                 onNavigateSettings = { navController.navigate("settings") },
                 onNavigateMakeSpace = { navController.navigate("make space") },
                 onNavigateRecord = { navController.navigate("record") },
@@ -61,8 +58,6 @@ fun AppNavHost() {
         composable("make space") {
             val viewModel: MakeSpaceViewModel = hiltViewModel()
             MakeSpaceScreen(
-                makeSpaceViewModel = makeSpaceViewModel,
-                authViewModel = authViewModel,
                 makeSpaceViewModel = viewModel,
                 onNavigateHome = { navController.navigate("home") }
             )
@@ -78,23 +73,20 @@ fun AppNavHost() {
         composable(
             route = "space/{spaceId}",
             arguments = listOf(navArgument("spaceId") { type = NavType.StringType })
-        ) {backStackEntry ->
+        ) { backStackEntry ->
+            val viewModel: SpaceViewModel = hiltViewModel()
             val spaceId = backStackEntry.arguments?.getString("spaceId") ?: return@composable
-            val spaceList by spaceViewModel.spaces.collectAsState()
+            val spaceList by viewModel.spaces.collectAsState()
             val targetSpace = spaceList.firstOrNull { it.spaceId == spaceId }
-            targetSpace?.let{target ->
+            targetSpace?.let { target ->
                 SpaceScreen(
-                    commentViewModel = commentViewModel,
+                    spaceViewModel = viewModel,
                     space = target,
                     onNavigateHome = { navController.navigate("home") }
                 )
             }
-        composable("space") {
-            val viewModel: SpaceViewModel = hiltViewModel()
-            SpaceScreen(
-                onNavigateHome = { navController.navigate("home") }
-            )
         }
+
 
         composable("settings") {
             val viewModel: SettingViewModel = hiltViewModel()

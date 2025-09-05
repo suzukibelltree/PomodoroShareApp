@@ -27,24 +27,12 @@ import com.belltree.pomodoroshareapp.domain.models.Space
 import com.belltree.pomodoroshareapp.MakeSpace.MakeSpaceViewModel
 import com.belltree.pomodoroshareapp.domain.repository.SpaceRepositoryImpl
 
-// TODO: 後で DI (Hilt) に置き換え
-//@Composable
-//private fun provideMakeSpaceViewModel(): MakeSpaceViewModel {
-//    val repo = remember { SpaceRepositoryImpl() }
-//    return viewModel(factory = object: androidx.lifecycle.ViewModelProvider.Factory {
-//        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-//            @Suppress("UNCHECKED_CAST")
-//            return MakeSpaceViewModel(repo) as T
-//        }
-//    })
-//}
 
 @Composable
 @Suppress("unused")
 fun MakeSpaceScreen(
     modifier: Modifier = Modifier,
     makeSpaceViewModel: MakeSpaceViewModel,
-    authViewModel: AuthViewModel,
     onNavigateHome: () -> Unit = {}
 ) {
     var roomName by remember { mutableStateOf("") }
@@ -52,7 +40,8 @@ fun MakeSpaceScreen(
     var error by remember { mutableStateOf<String?>(null) }
     var isPrivate by remember { mutableStateOf(false) }
 
-    val user = authViewModel.currentUser
+    val user = makeSpaceViewModel.user
+
 
     Scaffold(
         topBar = {
@@ -109,7 +98,7 @@ fun MakeSpaceScreen(
                         Space(
                             spaceId = "",
                             spaceName = roomName,
-                            ownerId = user.value?.uid ?: "",
+                            ownerId = user?.uid ?: "",
                             startTime = startTime,
                             sessionCount = 0,
                             participantsId = emptyList(),
