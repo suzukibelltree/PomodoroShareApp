@@ -1,6 +1,7 @@
 package com.belltree.pomodoroshareapp
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.navigation.compose.rememberNavController
@@ -76,9 +77,14 @@ fun AppNavHost() {
         ) { backStackEntry ->
             val viewModel: SpaceViewModel = hiltViewModel()
             val spaceId = backStackEntry.arguments?.getString("spaceId") ?: return@composable
-            val spaceList by viewModel.spaces.collectAsState()
-            val targetSpace = spaceList.firstOrNull { it.spaceId == spaceId }
-            targetSpace?.let { target ->
+
+            LaunchedEffect(spaceId) {
+                viewModel.getSpaceById(spaceId)
+                viewModel.observeSpace(spaceId)
+            }
+
+            val currentSpace by viewModel.space.collectAsState()
+            currentSpace?.let { target ->
                 SpaceScreen(
                     spaceViewModel = viewModel,
                     space = target,
