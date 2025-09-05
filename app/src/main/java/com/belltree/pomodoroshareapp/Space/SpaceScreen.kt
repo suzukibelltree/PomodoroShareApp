@@ -8,11 +8,14 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.belltree.pomodoroshareapp.domain.models.Space
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 
 @Composable
 fun SpaceScreen(
     modifier: Modifier = Modifier,
+    spaceViewModel: SpaceViewModel,
+    space: Space,
     onNavigateHome: () -> Unit = {}
 ) {
     Scaffold(

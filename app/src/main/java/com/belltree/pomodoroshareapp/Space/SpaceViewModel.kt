@@ -2,8 +2,10 @@ package com.belltree.pomodoroshareapp.Space
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.belltree.pomodoroshareapp.domain.models.Comment
 import com.belltree.pomodoroshareapp.domain.models.Record
 import com.belltree.pomodoroshareapp.domain.models.Space
+import com.belltree.pomodoroshareapp.domain.repository.CommentRepository
 import com.belltree.pomodoroshareapp.domain.repository.RecordRepository
 import com.belltree.pomodoroshareapp.domain.repository.SpaceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,12 +18,16 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class SpaceViewModel @Inject constructor(
     private val recordRepository: RecordRepository,
+    private val commentRepository: CommentRepository,
     private val spaceRepository: SpaceRepository
 ) : ViewModel() {
     private val _records = MutableStateFlow<List<Record>>(emptyList())
     val records: StateFlow<List<Record>> = _records
     private val _spaces = MutableStateFlow<List<Space>>(emptyList())
     val spaces: StateFlow<List<Space>> = _spaces
+
+    private val _comments = MutableStateFlow<List<Comment>>(emptyList())
+    val comments: StateFlow<List<Comment>> = _comments
 
     private val _space = MutableStateFlow<Space?>(null)
     val space: StateFlow<Space?> = _space

@@ -17,11 +17,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.belltree.pomodoroshareapp.Space.SpaceViewModel
 import com.belltree.pomodoroshareapp.domain.models.Space
 import com.belltree.pomodoroshareapp.domain.models.SpaceState
 import com.belltree.pomodoroshareapp.domain.models.TimerState
@@ -31,26 +35,19 @@ import kotlin.String
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
+	homeViewModel: HomeViewModel,
     onNavigateSettings: () -> Unit = {},
     onNavigateMakeSpace: () -> Unit = {},
     onNavigateRecord: () -> Unit = {},
-	onNavigateSpace: () -> Unit = {},
-	spaceList: List<Space> = listOf(
-		Space(
-			  spaceId = "",
-		      ownerId = "",
-              spaceName = "",
-              spaceState = SpaceState.WAITING,
-			  timerState = TimerState.STOPPED,
-			   startTime = 0L,
-			   sessionCount = 0,
-			   participantsId = emptyList(),
-			   createdAt = 0L,
-				lastUpdated = 0L,
-				isPrivate = false,
-		),
-	)
+	onNavigateSpace: (String) -> Unit = {}
 ) {
+
+	val spaces by homeViewModel.spaces.collectAsState()
+	LaunchedEffect(homeViewModel, spaces.isEmpty()){
+		if(spaces.isEmpty()){
+			homeViewModel.getUnfinishedSpaces()
+		}
+	}
 	Scaffold(
 		topBar = {
 			AppTopBar(
@@ -71,8 +68,8 @@ fun HomeScreen(
 				modifier = Modifier.fillMaxSize(),
 				contentPadding = PaddingValues(8.dp),
 			) {
-				items(spaceList) { item ->
-					HomeRow(space = item, onClick = { onNavigateSpace() })
+				items(spaces) { item ->
+					HomeRow(space = item,  onSpaceClick = { id -> onNavigateSpace(id) })
 				}
 			}
 			FloatingActionButton(

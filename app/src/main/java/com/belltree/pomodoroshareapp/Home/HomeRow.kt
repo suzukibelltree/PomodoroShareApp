@@ -22,21 +22,21 @@ import androidx.compose.foundation.clickable
 fun HomeRow(
     space: Space,
     modifier: Modifier = Modifier,
-    onClick: (Space) -> Unit = {}
+    onSpaceClick: (String) -> Unit
 ) {
     Card(
         modifier = modifier
-            .fillMaxWidth()
-            .clickable { onClick(space) },
+            .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF333333) // light gray background
-        )
+        ),
+        onClick = {onSpaceClick(space.spaceId)}
     ) {
         Column(Modifier.padding(16.dp)) {
-            SpaceHeader(username = "テストユーザー")
-            SpaceContent(content = "こんにちは")
-            SpaceFooter(createdAt = "2025/01/01")
+            SpaceHeader(username = space.ownerId)
+            SpaceContent(content = space.spaceName)
+            SpaceFooter(createdAt = space.createdAt)
         }
     }
 }
@@ -70,13 +70,13 @@ private fun SpaceContent(content: String) {
 }
 
 @Composable
-private fun SpaceFooter(createdAt: String) {
+private fun SpaceFooter(createdAt: Long) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start
     ) {
         Text(
-            text = createdAt,
+            text = createdAt.toString(),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
