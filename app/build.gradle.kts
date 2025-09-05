@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
+    id("com.google.devtools.ksp")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -43,7 +45,7 @@ android {
     }
     buildFeatures {
         compose = true
-    buildConfig = true
+        buildConfig = true
     }
 }
 
@@ -78,6 +80,11 @@ dependencies {
 
     // For ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    // For Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.android.compiler)
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

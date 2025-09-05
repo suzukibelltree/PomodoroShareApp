@@ -1,19 +1,19 @@
 package com.belltree.pomodoroshareapp.Home
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.belltree.pomodoroshareapp.domain.models.Space
-import com.belltree.pomodoroshareapp.domain.repository.SpaceRepositoryImpl
-import kotlinx.coroutines.launch
+import com.belltree.pomodoroshareapp.domain.repository.SpaceRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
-class HomeViewModel(
-    private val spaceRepository: SpaceRepositoryImpl
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    private val spaceRepository: SpaceRepository
 ) : ViewModel() {
     private val _spaces = MutableStateFlow<List<Space>>(emptyList())
     val spaces: StateFlow<List<Space>> = _spaces
@@ -52,16 +52,6 @@ class HomeViewModel(
         viewModelScope.launch {
             spaceRepository.createSpace(space)
         }
-    }
-}
-
-class HomeViewModelFactory(private val spaceRepository: SpaceRepositoryImpl) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-    if (modelClass.isAssignableFrom(HomeViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return HomeViewModel(spaceRepository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
 
