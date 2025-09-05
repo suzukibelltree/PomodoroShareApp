@@ -22,16 +22,16 @@ import androidx.compose.foundation.clickable
 fun HomeRow(
     space: Space,
     modifier: Modifier = Modifier,
-    onClick: (Space) -> Unit = {}
+    onSpaceClick: (String) -> Unit
 ) {
     Card(
         modifier = modifier
-            .fillMaxWidth()
-            .clickable { onClick(space) },
+            .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF333333) // light gray background
-        )
+        ),
+        onClick = {onSpaceClick(space.spaceId)}
     ) {
         Column(Modifier.padding(16.dp)) {
             SpaceHeader(username = space.ownerId)

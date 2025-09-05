@@ -1,11 +1,15 @@
 package com.belltree.pomodoroshareapp
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.composable
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.belltree.pomodoroshareapp.Login.AuthScreen
 import com.belltree.pomodoroshareapp.Login.AuthViewModel
 import com.belltree.pomodoroshareapp.Home.HomeScreen
@@ -52,7 +56,7 @@ fun AppNavHost(
                 onNavigateSettings = { navController.navigate("settings") },
                 onNavigateMakeSpace = { navController.navigate("make space") },
                 onNavigateRecord = { navController.navigate("record") },
-                onNavigateSpace = { navController.navigate("space") }
+                onNavigateSpace = { id -> navController.navigate("space/$id")},
             )
         }
 
@@ -70,10 +74,20 @@ fun AppNavHost(
             )
         }
 
-        composable("space") {
-            SpaceScreen(
-                onNavigateHome = { navController.navigate("home") }
-            )
+        composable(
+            route = "space/{spaceId}",
+            arguments = listOf(navArgument("spaceId") { type = NavType.StringType })
+        ) {backStackEntry ->
+            val spaceId = backStackEntry.arguments?.getString("spaceId") ?: return@composable
+            val spaceList by spaceViewModel.spaces.collectAsState()
+            val targetSpace = spaceList.firstOrNull { it.spaceId == spaceId }
+            targetSpace?.let{target ->
+                SpaceScreen(
+                    commentViewModel = commentViewModel,
+                    space = target,
+                    onNavigateHome = { navController.navigate("home") }
+                )
+            }
         }
 
         composable("settings") {

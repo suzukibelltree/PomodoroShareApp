@@ -39,7 +39,7 @@ fun HomeScreen(
     onNavigateSettings: () -> Unit = {},
     onNavigateMakeSpace: () -> Unit = {},
     onNavigateRecord: () -> Unit = {},
-	onNavigateSpace: () -> Unit = {}
+	onNavigateSpace: (String) -> Unit = {}
 ) {
 
 	val spaces by spaceViewModel.spaces.collectAsState()
@@ -69,7 +69,7 @@ fun HomeScreen(
 				contentPadding = PaddingValues(8.dp),
 			) {
 				items(spaces) { item ->
-					HomeRow(space = item, onClick = { onNavigateSpace() })
+					HomeRow(space = item,  onSpaceClick = { id -> onNavigateSpace(id) })
 				}
 			}
 			FloatingActionButton(

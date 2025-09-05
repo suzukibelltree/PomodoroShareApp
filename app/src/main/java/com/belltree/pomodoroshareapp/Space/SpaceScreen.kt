@@ -13,6 +13,7 @@ import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 @Composable
 fun SpaceScreen(
     modifier: Modifier = Modifier,
+    commentViewModel: CommentViewModel,
     onNavigateHome: () -> Unit = {}
 ) {
     Scaffold(
