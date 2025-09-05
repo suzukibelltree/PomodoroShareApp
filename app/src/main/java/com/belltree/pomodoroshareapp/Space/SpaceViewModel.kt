@@ -48,17 +48,12 @@ class SpaceViewModel @Inject constructor(
         }
     }
 
-    fun createSpace(space: Space) {
+    fun addComment(spaceId: String, comment: Comment){
         viewModelScope.launch {
-            spaceRepository.createSpace(space)
+            commentRepository.addComment(spaceId, comment)
         }
     }
 
-    fun addMyUserInfoToSpace(spaceId: String, userId: String) {
-        viewModelScope.launch {
-            spaceRepository.addMyUserInfoToSpace(spaceId, userId)
-        }
-    }
 
     fun observeSpace(spaceId: String) {
         // 既存の監視をキャンセルしてから新しい Flow を収集
