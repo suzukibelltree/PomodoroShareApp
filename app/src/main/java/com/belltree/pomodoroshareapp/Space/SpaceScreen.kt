@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayArrow
@@ -27,6 +28,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,7 +42,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.belltree.pomodoroshareapp.domain.models.Comment
 import com.belltree.pomodoroshareapp.domain.models.Space
+import com.belltree.pomodoroshareapp.domain.models.User
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -53,6 +57,10 @@ fun SpaceScreen(
     space: Space,
     onNavigateHome: () -> Unit = {}
 ) {
+
+    val comments = spaceViewModel.comments.collectAsState().value
+    val user = spaceViewModel.getCurrentUserDomain()
+
     Scaffold(
         topBar = {
             AppTopBar(
@@ -127,7 +135,14 @@ fun SpaceScreen(
             Spacer(Modifier.height(8.dp))
 
             if (selectedTab == 0) {
-                CommentSection()
+                user?.let { currentUser ->
+                    CommentSection(
+                        comments = comments,
+                        spaceViewModel = spaceViewModel,
+                        user = currentUser,
+                        spaceId = space.spaceId
+                    )
+                }
             } else {
                 ParticipantSection()
             }
@@ -164,7 +179,12 @@ private fun TimerCircle(
 }
 
 @Composable
-private fun CommentSection() {
+private fun CommentSection(
+    comments: List<Comment>,
+    spaceViewModel: SpaceViewModel,
+    user: User,
+    spaceId: String
+) {
     Column(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
@@ -173,7 +193,11 @@ private fun CommentSection() {
                 .background(Color(0xFFE6E6E6))
         ) {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                // Placeholder for comments
+                items(comments){comment ->
+                    CommentRow(
+                        comment = comment,
+                    )
+                }
             }
         }
         Spacer(Modifier.height(8.dp))
@@ -189,7 +213,21 @@ private fun CommentSection() {
                 modifier = Modifier.weight(1f)
             )
             Spacer(Modifier.size(8.dp))
-            IconButton(onClick = { /* send comment */ }) {
+            IconButton(onClick = {
+                if (input.isNotEmpty()) {
+                    spaceViewModel.addComment(
+                        spaceId = spaceId,
+                        Comment(
+                            spaceId = spaceId,
+                            userId = user.userId,
+                            userName = user.userName,
+                            content = input,
+                            postedAt = 11111111//あとでIntent.toLocalDateTime()に変更
+                        )
+                    )
+                }
+                input = ""
+            }) {
                 Text("▶", color = Color(0xFF285D9D), fontSize = 18.sp)
             }
         }

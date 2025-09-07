@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.belltree.pomodoroshareapp.domain.models.Comment
 import com.belltree.pomodoroshareapp.domain.models.Record
 import com.belltree.pomodoroshareapp.domain.models.Space
+import com.belltree.pomodoroshareapp.domain.models.User
+import com.belltree.pomodoroshareapp.domain.repository.AuthRepository
 import com.belltree.pomodoroshareapp.domain.repository.CommentRepository
 import com.belltree.pomodoroshareapp.domain.repository.RecordRepository
 import com.belltree.pomodoroshareapp.domain.repository.SpaceRepository
@@ -19,7 +21,8 @@ import kotlinx.coroutines.launch
 class SpaceViewModel @Inject constructor(
     private val recordRepository: RecordRepository,
     private val commentRepository: CommentRepository,
-    private val spaceRepository: SpaceRepository
+    private val spaceRepository: SpaceRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
     private val _records = MutableStateFlow<List<Record>>(emptyList())
     val records: StateFlow<List<Record>> = _records
@@ -35,6 +38,13 @@ class SpaceViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    fun getCurrentUser() = authRepository.getCurrentUser()
+
+    fun getCurrentUserDomain(): User? {
+        val u = authRepository.getCurrentUser()
+        return u?.let { User(userId = it.uid, userName = it.displayName ?: "") }
+    }
+
 
     fun getUnfinishedSpaces() {
         viewModelScope.launch {
@@ -48,17 +58,12 @@ class SpaceViewModel @Inject constructor(
         }
     }
 
-    fun createSpace(space: Space) {
+    fun addComment(spaceId: String, comment: Comment){
         viewModelScope.launch {
-            spaceRepository.createSpace(space)
+            commentRepository.addComment(spaceId, comment)
         }
     }
 
-    fun addMyUserInfoToSpace(spaceId: String, userId: String) {
-        viewModelScope.launch {
-            spaceRepository.addMyUserInfoToSpace(spaceId, userId)
-        }
-    }
 
     fun observeSpace(spaceId: String) {
         // 既存の監視をキャンセルしてから新しい Flow を収集
