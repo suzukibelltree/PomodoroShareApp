@@ -18,6 +18,17 @@ class RecordRepositoryImpl @Inject constructor(
         return snapshot.documents.mapNotNull { it.toObject(Record::class.java) }
     }
 
+    // そのユーザーの過去1週間のレコードを取得(RecordViewModelで使用する)
+    override suspend fun getCurrentOneWeekRecords(userId: String): List<Record> {
+        val oneWeekAgo = System.currentTimeMillis() - 7 * 24 * 60 * 60 * 1000
+        val snapshot = db.collection("records")
+            .whereEqualTo("userId", userId)
+            .whereGreaterThanOrEqualTo("startTime", oneWeekAgo)
+            .get()
+            .await()
+        return snapshot.documents.mapNotNull { it.toObject(Record::class.java) }
+    }
+
     override fun addRecord(record: Record) {
         db.collection("records").add(record)
     }

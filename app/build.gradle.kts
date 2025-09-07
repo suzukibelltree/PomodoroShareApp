@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -20,6 +23,13 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // TODO: 本番では gradle.properties など外部から注入
+        val localProps = Properties()
+        val localFile = rootProject.file("local.properties")
+        if (localFile.exists()) {
+            localProps.load(FileInputStream(localFile))
+        }
+        val apiKey: String = localProps.getProperty("API_KEY", "")
+        buildConfigField("String", "API_KEY", "\"$apiKey\"")
         buildConfigField(
             "String",
             "WEB_CLIENT_ID",
@@ -84,7 +94,10 @@ dependencies {
     // For Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation(libs.androidx.hilt.navigation.compose)
+
+    // For Gemini API
+    implementation(libs.generativeai)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

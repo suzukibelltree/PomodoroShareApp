@@ -4,12 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.navigation.compose.rememberNavController
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavType
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.belltree.pomodoroshareapp.Home.HomeScreen
 import com.belltree.pomodoroshareapp.Home.HomeViewModel
@@ -52,7 +51,7 @@ fun AppNavHost() {
                 onNavigateSettings = { navController.navigate("settings") },
                 onNavigateMakeSpace = { navController.navigate("make space") },
                 onNavigateRecord = { navController.navigate("record") },
-                onNavigateSpace = { id -> navController.navigate("space/$id")},
+                onNavigateSpace = { id -> navController.navigate("space/$id") },
             )
         }
 
@@ -67,6 +66,7 @@ fun AppNavHost() {
         composable("record") {
             val viewModel: RecordViewModel = hiltViewModel()
             RecordScreen(
+                recordViewModel = viewModel,
                 onNavigateHome = { navController.navigate("home") }
             )
         }
