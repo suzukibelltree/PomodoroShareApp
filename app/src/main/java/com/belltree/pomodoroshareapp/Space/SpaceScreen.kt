@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.belltree.pomodoroshareapp.domain.models.Comment
 import com.belltree.pomodoroshareapp.domain.models.Space
+import com.belltree.pomodoroshareapp.domain.models.User
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -58,6 +59,7 @@ fun SpaceScreen(
 ) {
 
     val comments = spaceViewModel.comments.collectAsState().value
+    val user = spaceViewModel.getCurrentUserDomain()
 
     Scaffold(
         topBar = {
@@ -133,10 +135,14 @@ fun SpaceScreen(
             Spacer(Modifier.height(8.dp))
 
             if (selectedTab == 0) {
-                CommentSection(
-                    comments = comments,
-                    spaceViewModel = spaceViewModel
-                )
+                user?.let { currentUser ->
+                    CommentSection(
+                        comments = comments,
+                        spaceViewModel = spaceViewModel,
+                        user = currentUser,
+                        spaceId = space.spaceId
+                    )
+                }
             } else {
                 ParticipantSection()
             }
@@ -175,7 +181,9 @@ private fun TimerCircle(
 @Composable
 private fun CommentSection(
     comments: List<Comment>,
-    spaceViewModel: SpaceViewModel
+    spaceViewModel: SpaceViewModel,
+    user: User,
+    spaceId: String
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         Box(
@@ -208,12 +216,17 @@ private fun CommentSection(
             IconButton(onClick = {
                 if (input.isNotEmpty()) {
                     spaceViewModel.addComment(
-                        spaceId = spaceViewModel.spaceID,
+                        spaceId = spaceId,
                         Comment(
-
+                            spaceId = spaceId,
+                            userId = user.userId,
+                            userName = user.userName,
+                            content = input,
+                            postedAt = 11111111//あとでIntent.toLocalDateTime()に変更
                         )
                     )
                 }
+                input = ""
             }) {
                 Text("▶", color = Color(0xFF285D9D), fontSize = 18.sp)
             }
