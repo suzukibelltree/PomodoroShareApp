@@ -14,12 +14,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -28,6 +25,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -59,7 +58,17 @@ fun SpaceScreen(
 ) {
 
     val comments = spaceViewModel.comments.collectAsState().value
-    val user = spaceViewModel.getCurrentUserDomain()
+    var user by remember { mutableStateOf<User?>(null) }
+    val participantsName = spaceViewModel.userNames.collectAsState().value
+
+    LaunchedEffect(Unit) {
+        user = spaceViewModel.getCurrentUserById()
+    }
+    
+    // 参加者リストが変更されたときにユーザー名を再取得
+    LaunchedEffect(space.participantsId) {
+        spaceViewModel.fetchUserNames(space.participantsId)
+    }
 
     Scaffold(
         topBar = {
@@ -74,16 +83,17 @@ fun SpaceScreen(
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.Top
+                .padding(vertical = 8.dp),
+            verticalArrangement = Arrangement.Top,
         ) {
             val startLabel = formatDateTimeForLabel(space.startTime)
             Text(
-                text = "開始予定時刻: $startLabel",
+                text = "開始予定時刻\n $startLabel",
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 12.dp)
+                    .padding(bottom = 12.dp),
+                textAlign = TextAlign.Center
             )
 
             Box(
@@ -101,25 +111,10 @@ fun SpaceScreen(
                 )
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = { /* play/pause */ }) {
-                    Icon(imageVector = Icons.Filled.PlayArrow, contentDescription = "Play")
-                }
-                IconButton(onClick = { /* reset */ }) {
-                    Icon(imageVector = Icons.Filled.Refresh, contentDescription = "Reset")
-                }
-            }
-
             Spacer(Modifier.height(8.dp))
 
             var selectedTab by remember { mutableStateOf(0) }
-            TabRow(selectedTabIndex = selectedTab) {
+            TabRow(selectedTabIndex = selectedTab, containerColor = Color(0xFFE6E6E6)) {
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
@@ -132,8 +127,6 @@ fun SpaceScreen(
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
-
             if (selectedTab == 0) {
                 user?.let { currentUser ->
                     CommentSection(
@@ -144,7 +137,9 @@ fun SpaceScreen(
                     )
                 }
             } else {
-                ParticipantSection()
+                ParticipantSection(
+                    participantsName = participantsName
+                )
             }
         }
     }
@@ -172,8 +167,12 @@ private fun TimerCircle(
             )
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = "Timer", fontSize = 16.sp, textAlign = TextAlign.Center)
-            Text(text = timeText, fontSize = 20.sp, textAlign = TextAlign.Center)
+            Text(
+                text = timeText,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
@@ -185,6 +184,14 @@ private fun CommentSection(
     user: User,
     spaceId: String
 ) {
+    val listState = rememberLazyListState()
+
+    // コメントが追加されるたびにスクロール
+    LaunchedEffect(comments.size) {
+        if (comments.isNotEmpty()) {
+            listState.animateScrollToItem(0)
+        }
+    }
     Column(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
@@ -192,8 +199,8 @@ private fun CommentSection(
                 .fillMaxWidth()
                 .background(Color(0xFFE6E6E6))
         ) {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(comments){comment ->
+            LazyColumn(modifier = Modifier.fillMaxSize(), reverseLayout = false) {
+                items(comments) { comment ->
                     CommentRow(
                         comment = comment,
                     )
@@ -210,7 +217,9 @@ private fun CommentSection(
                 value = input,
                 onValueChange = { input = it },
                 placeholder = { Text("コメントを入力") },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp)
             )
             Spacer(Modifier.size(8.dp))
             IconButton(onClick = {
@@ -222,7 +231,7 @@ private fun CommentSection(
                             userId = user.userId,
                             userName = user.userName,
                             content = input,
-                            postedAt = 11111111//あとでIntent.toLocalDateTime()に変更
+                            postedAt = System.currentTimeMillis()
                         )
                     )
                 }
@@ -235,14 +244,28 @@ private fun CommentSection(
 }
 
 @Composable
-private fun ParticipantSection() {
+private fun ParticipantSection(
+    participantsName: List<String>
+) {
     Column(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
                 .background(Color(0xFFE6E6E6))
-        ) {}
+        ) {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(participantsName) { name ->
+                    Text(
+                        text = name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp)
+                    )
+                }
+            }
+        }
     }
 }
 
