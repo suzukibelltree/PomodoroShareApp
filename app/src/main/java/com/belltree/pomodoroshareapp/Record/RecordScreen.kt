@@ -13,6 +13,7 @@ import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 @Composable
 fun RecordScreen(
     modifier: Modifier = Modifier,
+    recordViewModel: RecordViewModel,
     onNavigateHome: () -> Unit = {}
 ) {
     Scaffold(
@@ -23,12 +24,12 @@ fun RecordScreen(
                 onNavigationClick = onNavigateHome,
             )
         }
-    ) {innerPadding ->
+    ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-        ){
+        ) {
         }
     }
 }
