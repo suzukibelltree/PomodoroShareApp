@@ -18,4 +18,14 @@ class UserRepositoryImpl @Inject constructor(
             throw e
         }
     }
+
+    override suspend fun getUserById(userId: String): User? {
+        return try {
+            val snapshot = db.collection("users").document(userId).get().await()
+            snapshot.toObject(User::class.java)
+        } catch (e: Exception) {
+            Log.e("UserRepository", "Failed to get user", e)
+            null
+        }
+    }
 }

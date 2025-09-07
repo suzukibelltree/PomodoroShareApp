@@ -6,10 +6,11 @@ import com.belltree.pomodoroshareapp.domain.models.Comment
 import com.belltree.pomodoroshareapp.domain.models.Record
 import com.belltree.pomodoroshareapp.domain.models.Space
 import com.belltree.pomodoroshareapp.domain.models.User
-import com.belltree.pomodoroshareapp.domain.repository.AuthRepository
 import com.belltree.pomodoroshareapp.domain.repository.CommentRepository
 import com.belltree.pomodoroshareapp.domain.repository.RecordRepository
 import com.belltree.pomodoroshareapp.domain.repository.SpaceRepository
+import com.belltree.pomodoroshareapp.domain.repository.UserRepository
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,8 +23,10 @@ class SpaceViewModel @Inject constructor(
     private val recordRepository: RecordRepository,
     private val commentRepository: CommentRepository,
     private val spaceRepository: SpaceRepository,
-    private val authRepository: AuthRepository
+    private val userRepository: UserRepository,
+    private val auth: FirebaseAuth
 ) : ViewModel() {
+    val userId: String = auth.currentUser?.uid ?: "Unknown"
     private val _records = MutableStateFlow<List<Record>>(emptyList())
     val records: StateFlow<List<Record>> = _records
     private val _spaces = MutableStateFlow<List<Space>>(emptyList())
@@ -35,14 +38,37 @@ class SpaceViewModel @Inject constructor(
     private val _space = MutableStateFlow<Space?>(null)
     val space: StateFlow<Space?> = _space
 
+    private val _userNames = MutableStateFlow<List<String>>(emptyList())
+    val userNames: StateFlow<List<String>> = _userNames
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    fun getCurrentUser() = authRepository.getCurrentUser()
+    suspend fun getCurrentUserById(): User {
+        val u = userRepository.getUserById(userId)
+        return User(
+            userId = u?.userId ?: "Unknown",
+            userName = u?.userName ?: "Unknown"
+        )
+    }
 
-    fun getCurrentUserDomain(): User? {
-        val u = authRepository.getCurrentUser()
-        return u?.let { User(userId = it.uid, userName = it.displayName ?: "") }
+    fun addMyUserInfoToFirestore(spaceId: String) {
+        viewModelScope.launch {
+            spaceRepository.addMyUserInfoToSpace(
+                spaceId = spaceId,
+                userId = userId
+            )
+        }
+    }
+
+    fun fetchUserNames(userIds: List<String>) {
+        viewModelScope.launch {
+            val names = userIds.map { userId ->
+                val u = userRepository.getUserById(userId)
+                u?.userName ?: "Unknown"
+            }
+            _userNames.value = names
+        }
     }
 
 
@@ -58,9 +84,18 @@ class SpaceViewModel @Inject constructor(
         }
     }
 
-    fun addComment(spaceId: String, comment: Comment){
+    fun addComment(spaceId: String, comment: Comment) {
         viewModelScope.launch {
             commentRepository.addComment(spaceId, comment)
+        }
+    }
+
+    fun getComments(spaceId: String) {
+        viewModelScope.launch {
+            commentRepository.getCommentsFlow(spaceId)
+                .collect { commentList ->
+                    _comments.value = commentList
+                }
         }
     }
 
@@ -71,6 +106,10 @@ class SpaceViewModel @Inject constructor(
             spaceRepository.observeSpace(spaceId)
                 .collect { latest ->
                     _space.value = latest
+                    // 参加者リストが変更された場合、ユーザー名を再取得
+                    latest?.let { space ->
+                        fetchUserNames(space.participantsId)
+                    }
                 }
         }
     }

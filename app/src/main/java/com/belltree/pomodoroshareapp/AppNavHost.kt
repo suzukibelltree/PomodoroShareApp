@@ -80,6 +80,8 @@ fun AppNavHost() {
 
             LaunchedEffect(spaceId) {
                 viewModel.getSpaceById(spaceId)
+                viewModel.addMyUserInfoToFirestore(spaceId)
+                viewModel.getComments(spaceId)
                 viewModel.observeSpace(spaceId)
             }
 

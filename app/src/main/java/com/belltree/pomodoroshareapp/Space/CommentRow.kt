@@ -22,7 +22,7 @@ import com.belltree.pomodoroshareapp.domain.models.Comment
 fun CommentRow(
     modifier: Modifier = Modifier,
     comment: Comment,
-){
+) {
     CommentCard(
         modifier, comment
     )
@@ -32,18 +32,21 @@ fun CommentRow(
 private fun CommentCard(
     modifier: Modifier = Modifier,
     comment: Comment
-){
+) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF2F2F2F))
+        colors = CardDefaults.cardColors(containerColor = Color.LightGray)
     ) {
         Column(Modifier.padding(16.dp)) {
-            CommentHeader(username = comment?.userName ?:" username" )
-            CommentContent(content = comment?.content ?: "Content", images = emptyList())
+            CommentHeader(username = comment.userName)
+            CommentContent(content = comment.content, images = emptyList())
         }
     }
 }
+
 @Composable
 private fun CommentHeader(username: String) {
     Row(
@@ -55,19 +58,20 @@ private fun CommentHeader(username: String) {
         Text(
             text = username,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = Color.Black,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
     }
 }
+
 @Composable
 private fun CommentContent(content: String, images: List<String>?) {
     Column {
         Text(
             text = content,
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray,
+            color = Color.Black,
             modifier = Modifier.padding(bottom = if (images.isNullOrEmpty()) 12.dp else 12.dp)
         )
     }
