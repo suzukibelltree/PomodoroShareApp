@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.belltree.pomodoroshareapp.domain.models.Comment
 import com.belltree.pomodoroshareapp.domain.models.Record
 import com.belltree.pomodoroshareapp.domain.models.Space
+import com.belltree.pomodoroshareapp.domain.models.SpaceState
 import com.belltree.pomodoroshareapp.domain.models.User
 import com.belltree.pomodoroshareapp.domain.repository.CommentRepository
 import com.belltree.pomodoroshareapp.domain.repository.RecordRepository
@@ -13,13 +14,17 @@ import com.belltree.pomodoroshareapp.domain.repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class SpaceViewModel @Inject constructor(
+class SpaceViewModel
+@Inject
+constructor(
     private val recordRepository: RecordRepository,
     private val commentRepository: CommentRepository,
     private val spaceRepository: SpaceRepository,
@@ -35,12 +40,55 @@ class SpaceViewModel @Inject constructor(
     private val _comments = MutableStateFlow<List<Comment>>(emptyList())
     val comments: StateFlow<List<Comment>> = _comments
 
+    private val _myComments = MutableStateFlow<List<Comment?>>(emptyList())
+    val myComments: StateFlow<List<Comment?>> = _myComments
+
     private val _space = MutableStateFlow<Space?>(null)
     val space: StateFlow<Space?> = _space
 
     private val _userNames = MutableStateFlow<List<String>>(emptyList())
     val userNames: StateFlow<List<String>> = _userNames
 
+    private val _ownerName = MutableStateFlow<String>("")
+    val ownerName: StateFlow<String> = _ownerName
+
+    // タイマーの進行状況(Max=1.0, Min=0.0)
+    private val _progress = MutableStateFlow(1f)
+    val progress: StateFlow<Float> = _progress
+
+    // タイマーが動作中かどうか
+    private val _isRunning = MutableStateFlow(false)
+    val isRunning: StateFlow<Boolean> = _isRunning
+
+    // 残り時間(ミリ秒)
+    private val _remainingTimeMillis = MutableStateFlow(0L)
+    val remainingTimeMillis: StateFlow<Long> = _remainingTimeMillis
+
+    // 開始前のカウントダウン表示用
+    private val _timeUntilStartMillis = MutableStateFlow<Long?>(null)
+    val timeUntilStartMillis: StateFlow<Long?> = _timeUntilStartMillis
+
+    private val _currentSessionCount = MutableStateFlow(0)
+    val currentSessionCount: StateFlow<Int> = _currentSessionCount
+
+    // スペースの状態 (待機中、作業中、休憩中、終了)
+    private val _spaceState = MutableStateFlow(SpaceState.WORKING)
+    val spaceState: StateFlow<SpaceState> = _spaceState
+
+    private var timerJob: Job? = null
+
+    // セッションの数
+    private var sessionCount = 0
+
+    // 作業時間と休憩時間 (ミリ秒)
+    private var workDuration = 25 * 60 * 1000L
+    private var breakDuration = 5 * 60 * 1000L
+
+    // スペースの開始時間 (ミリ秒)
+    var startTime: Long = 0L
+
+    // 2セクション目以降終了時のRecord更新に使用
+    private var currentRecordId: String? = null
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -63,25 +111,112 @@ class SpaceViewModel @Inject constructor(
 
     fun fetchUserNames(userIds: List<String>) {
         viewModelScope.launch {
-            val names = userIds.map { userId ->
-                val u = userRepository.getUserById(userId)
-                u?.userName ?: "Unknown"
-            }
+            val names =
+                userIds.map { userId ->
+                    val u = userRepository.getUserById(userId)
+                    u?.userName ?: "Unknown"
+                }
             _userNames.value = names
         }
     }
 
-
-    fun getUnfinishedSpaces() {
+    fun fetchOwnerName(ownerId: String) {
         viewModelScope.launch {
-            _spaces.value = spaceRepository.getUnfinishedSpaces()
+            val owner = userRepository.getUserById(ownerId)
+            _ownerName.value = owner?.userName ?: "Unknown"
         }
     }
 
     fun getSpaceById(spaceId: String) {
         viewModelScope.launch {
-            _space.value = spaceRepository.getSpaceById(spaceId)
+            val space = spaceRepository.getSpaceById(spaceId)
+            _space.value = space
+            space?.let { setSpace(it) }
         }
+    }
+
+    // タイマーのUI表示のために情報をセットする関数(部屋入室時に1回だけ呼ぶ)
+    fun setSpace(space: Space) {
+        sessionCount = space.sessionCount
+        startTime = space.startTime
+        _remainingTimeMillis.value = workDuration
+
+        timerJob?.cancel()
+        timerJob =
+            viewModelScope.launch {
+                var previousState: SpaceState? = null
+                while (true) {
+                    val now = System.currentTimeMillis()
+                    val timeUntilStart = startTime - now
+                    // 部屋開始前の処理
+                    if (timeUntilStart > 0) {
+                        _timeUntilStartMillis.value = timeUntilStart
+                        _spaceState.value = SpaceState.WAITING
+                        _progress.value = 1f
+                    } else { // 部屋開始後の処理
+                        _timeUntilStartMillis.value = null
+                        val elapsed = (now - startTime).coerceAtLeast(0L)
+                        val cycleLength = workDuration + breakDuration
+                        val currentCycle = (elapsed / cycleLength).toInt()
+                        // 全セッション終了後の処理
+                        if (currentCycle >= sessionCount) {
+                            _spaceState.value = SpaceState.FINISHED
+                            _isRunning.value = false
+                            _progress.value = 0f
+                            _remainingTimeMillis.value = 0L
+                            stopTimer()
+                            break
+                        }
+                        val cyclePosition = elapsed % cycleLength
+                        // 作業時間中の処理
+                        if (cyclePosition < workDuration) {
+                            _currentSessionCount.value = currentCycle + 1
+                            _spaceState.value = SpaceState.WORKING
+                            val remaining = workDuration - cyclePosition
+                            _remainingTimeMillis.value = remaining
+                            _progress.value = remaining.toFloat() / workDuration
+                        } else {
+                            // 休憩時間中の処理
+                            _spaceState.value = SpaceState.BREAK
+                            val breakElapsed = cyclePosition - workDuration
+                            val remaining = breakDuration - breakElapsed
+                            _remainingTimeMillis.value = remaining
+                            _progress.value = remaining.toFloat() / breakDuration
+                        }
+                    }
+                    if (previousState == SpaceState.WORKING && _spaceState.value == SpaceState.BREAK) {
+                        val finishedSession = _currentSessionCount.value
+                        if (finishedSession == 1) {
+                            // 1セッション目終了
+                            addRecord(
+                                Record(
+                                    userId = userId,
+                                    roomId = space.spaceId,
+                                    roomName = space.spaceName,
+                                    startTime = space.startTime,
+                                    endTime = System.currentTimeMillis(),
+                                    durationMinutes = 25,
+                                    createdAt = space.createdAt
+                                ),
+                                commentList = myComments.value
+                            )
+                        } else {
+                            // 2セッション目以降終了
+                            upDateRecord(newCommentList = myComments.value)
+                        }
+                    }
+
+                    previousState = _spaceState.value
+                    delay(1000)  // 1秒ごとに更新する
+                }
+            }
+    }
+
+    fun stopTimer() {
+        timerJob?.cancel()
+        _progress.value = 1f
+        _remainingTimeMillis.value = 0L
+        _timeUntilStartMillis.value = null
     }
 
     fun addComment(spaceId: String, comment: Comment) {
@@ -92,25 +227,67 @@ class SpaceViewModel @Inject constructor(
 
     fun getComments(spaceId: String) {
         viewModelScope.launch {
-            commentRepository.getCommentsFlow(spaceId)
-                .collect { commentList ->
-                    _comments.value = commentList
-                }
+            commentRepository.getCommentsFlow(spaceId).collect { commentList ->
+                _comments.value = commentList
+            }
         }
     }
 
+    fun getMyComments() {
+        viewModelScope.launch {
+            commentRepository.getMyCommentsFlow(userId).collect { myCommentList ->
+                _myComments.value = myCommentList
+            }
+        }
+    }
 
     fun observeSpace(spaceId: String) {
         // 既存の監視をキャンセルしてから新しい Flow を収集
         viewModelScope.launch {
-            spaceRepository.observeSpace(spaceId)
-                .collect { latest ->
-                    _space.value = latest
-                    // 参加者リストが変更された場合、ユーザー名を再取得
-                    latest?.let { space ->
-                        fetchUserNames(space.participantsId)
-                    }
+            spaceRepository.observeSpace(spaceId).collect { latest ->
+                _space.value = latest
+                // 参加者リストが変更された場合、ユーザー名を再取得
+                latest?.let { space ->
+                    fetchUserNames(space.participantsId)
+                    fetchOwnerName(space.ownerId)
                 }
+            }
         }
     }
+
+    fun addRecord(record: Record, commentList: List<Comment?>? = null) {
+        viewModelScope.launch {
+            val finalRecord = if (commentList != null) {
+                record.copy(taskDescription = commentsToTaskDescription(commentList))
+            } else {
+                record
+            }
+
+            val docRef = recordRepository.addRecordReturnDocRef(finalRecord)
+            currentRecordId = docRef.id
+        }
+    }
+
+
+    fun upDateRecord(newCommentList: List<Comment?>) {
+        val recordId = currentRecordId ?: return
+
+        val updatedRecord = Record(
+            endTime = System.currentTimeMillis(),
+            durationMinutes = currentSessionCount.value * 25,
+            taskDescription = commentsToTaskDescription(newCommentList)
+        )
+
+        viewModelScope.launch {
+            recordRepository.updateRecord(recordId, updatedRecord)
+        }
+    }
+
+
+    private fun commentsToTaskDescription(commentList: List<Comment?>): List<String> {
+        return commentList
+            .sortedBy { it?.postedAt }
+            .map { it?.content ?: "" }
+    }
+
 }

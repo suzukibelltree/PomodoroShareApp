@@ -29,51 +29,49 @@ fun AppNavHost() {
     val navController = rememberNavController()
 
     NavHost(
-        navController = navController,
-        startDestination = "login",
+            navController = navController,
+            startDestination = "login",
     ) {
         composable("login") {
             val viewModel: AuthViewModel = hiltViewModel()
             AuthScreen(
-                viewModel = viewModel,
-                onSignedIn = {
-                    navController.navigate("home") {
-                        popUpTo("login") { inclusive = true }
+                    viewModel = viewModel,
+                    onSignedIn = {
+                        navController.navigate("home") { popUpTo("login") { inclusive = true } }
                     }
-                }
             )
         }
 
         composable("home") {
             val viewModel: HomeViewModel = hiltViewModel()
             HomeScreen(
-                homeViewModel = viewModel,
-                onNavigateSettings = { navController.navigate("settings") },
-                onNavigateMakeSpace = { navController.navigate("make space") },
-                onNavigateRecord = { navController.navigate("record") },
-                onNavigateSpace = { id -> navController.navigate("space/$id") },
+                    homeViewModel = viewModel,
+                    onNavigateSettings = { navController.navigate("settings") },
+                    onNavigateMakeSpace = { navController.navigate("make space") },
+                    onNavigateRecord = { navController.navigate("record") },
+                    onNavigateSpace = { id -> navController.navigate("space/$id") },
             )
         }
 
         composable("make space") {
             val viewModel: MakeSpaceViewModel = hiltViewModel()
             MakeSpaceScreen(
-                makeSpaceViewModel = viewModel,
-                onNavigateHome = { navController.navigate("home") }
+                    makeSpaceViewModel = viewModel,
+                    onNavigateHome = { navController.navigate("home") }
             )
         }
 
         composable("record") {
             val viewModel: RecordViewModel = hiltViewModel()
             RecordScreen(
-                recordViewModel = viewModel,
-                onNavigateHome = { navController.navigate("home") }
+                    recordViewModel = viewModel,
+                    onNavigateHome = { navController.navigate("home") }
             )
         }
 
         composable(
-            route = "space/{spaceId}",
-            arguments = listOf(navArgument("spaceId") { type = NavType.StringType })
+                route = "space/{spaceId}",
+                arguments = listOf(navArgument("spaceId") { type = NavType.StringType })
         ) { backStackEntry ->
             val viewModel: SpaceViewModel = hiltViewModel()
             val spaceId = backStackEntry.arguments?.getString("spaceId") ?: return@composable
@@ -88,27 +86,23 @@ fun AppNavHost() {
             val currentSpace by viewModel.space.collectAsState()
             currentSpace?.let { target ->
                 SpaceScreen(
-                    spaceViewModel = viewModel,
-                    space = target,
-                    onNavigateHome = { navController.navigate("home") }
+                        spaceViewModel = viewModel,
+                        space = target,
+                        onNavigateHome = { navController.navigate("home") }
                 )
             }
         }
 
-
         composable("settings") {
             val viewModel: SettingViewModel = hiltViewModel()
             SettingScreen(
-                settingViewModel = viewModel,
-                onSignOut = {
-                    viewModel.signOut()
-                    navController.navigate("login") {
-                        popUpTo("settings") { inclusive = true }
-                    }
-                },
-                onNavigateHome = { navController.navigate("home") }
+                    settingViewModel = viewModel,
+                    onSignOut = {
+                        viewModel.signOut()
+                        navController.navigate("login") { popUpTo("settings") { inclusive = true } }
+                    },
+                    onNavigateHome = { navController.navigate("home") }
             )
         }
-
     }
 }

@@ -8,6 +8,7 @@ data class Space(
     val timerState: TimerState = TimerState.STOPPED,
     val startTime: Long = 0L,
     val sessionCount: Int = 0,
+    val currentSessionCount: Int = 0,
     val participantsId: List<String> = emptyList(),
     val createdAt: Long = 0L,
     val lastUpdated: Long = 0L,
