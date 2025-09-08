@@ -12,11 +12,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -60,11 +63,12 @@ fun SpaceScreen(
     val comments = spaceViewModel.comments.collectAsState().value
     var user by remember { mutableStateOf<User?>(null) }
     val participantsName = spaceViewModel.userNames.collectAsState().value
+    val ownerName = spaceViewModel.ownerName.collectAsState().value
 
     LaunchedEffect(Unit) {
         user = spaceViewModel.getCurrentUserById()
     }
-    
+
     // 参加者リストが変更されたときにユーザー名を再取得
     LaunchedEffect(space.participantsId) {
         spaceViewModel.fetchUserNames(space.participantsId)
@@ -138,7 +142,8 @@ fun SpaceScreen(
                 }
             } else {
                 ParticipantSection(
-                    participantsName = participantsName
+                    participantsName = participantsName,
+                    ownerName = ownerName
                 )
             }
         }
@@ -244,9 +249,7 @@ private fun CommentSection(
 }
 
 @Composable
-private fun ParticipantSection(
-    participantsName: List<String>
-) {
+private fun ParticipantSection(participantsName: List<String>, ownerName: String) {
     Column(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
@@ -256,16 +259,37 @@ private fun ParticipantSection(
         ) {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(participantsName) { name ->
-                    Text(
-                        text = name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp)
-                    )
+                    ParticipantRow(name = name, isOwner = name == ownerName)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ParticipantRow(name: String, isOwner: Boolean) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (isOwner) {
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = "部屋主",
+                tint = Color(0xFFFFD700),
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+        } else {
+            Spacer(modifier = Modifier.width(24.dp)) // アイコン分のスペースを空ける
+        }
+        Text(
+            text = name,
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (isOwner) Color(0xFF285D9D) else Color.Unspecified // 部屋主は青色
+        )
     }
 }
 

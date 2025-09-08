@@ -82,6 +82,7 @@ fun AppNavHost() {
                 viewModel.getSpaceById(spaceId)
                 viewModel.addMyUserInfoToFirestore(spaceId)
                 viewModel.getComments(spaceId)
+                viewModel.fetchOwnerName(spaceId)
                 viewModel.observeSpace(spaceId)
             }
 

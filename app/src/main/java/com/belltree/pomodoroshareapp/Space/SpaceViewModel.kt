@@ -41,6 +41,9 @@ class SpaceViewModel @Inject constructor(
     private val _userNames = MutableStateFlow<List<String>>(emptyList())
     val userNames: StateFlow<List<String>> = _userNames
 
+    private val _ownerName = MutableStateFlow<String>("")
+    val ownerName: StateFlow<String> = _ownerName
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -71,10 +74,10 @@ class SpaceViewModel @Inject constructor(
         }
     }
 
-
-    fun getUnfinishedSpaces() {
+    fun fetchOwnerName(ownerId: String) {
         viewModelScope.launch {
-            _spaces.value = spaceRepository.getUnfinishedSpaces()
+            val owner = userRepository.getUserById(ownerId)
+            _ownerName.value = owner?.userName ?: "Unknown"
         }
     }
 
