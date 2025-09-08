@@ -40,6 +40,9 @@ constructor(
     private val _comments = MutableStateFlow<List<Comment>>(emptyList())
     val comments: StateFlow<List<Comment>> = _comments
 
+    private val _myComments = MutableStateFlow<List<Comment?>>(emptyList())
+    val myComments: StateFlow<List<Comment?>> = _myComments
+
     private val _space = MutableStateFlow<Space?>(null)
     val space: StateFlow<Space?> = _space
 
@@ -83,6 +86,9 @@ constructor(
 
     // スペースの開始時間 (ミリ秒)
     var startTime: Long = 0L
+
+    // 2セクション目以降終了時のRecord更新に使用
+    private var currentRecordId: String? = null
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -138,6 +144,7 @@ constructor(
         timerJob?.cancel()
         timerJob =
             viewModelScope.launch {
+                var previousState: SpaceState? = null
                 while (true) {
                     val now = System.currentTimeMillis()
                     val timeUntilStart = startTime - now
@@ -177,6 +184,29 @@ constructor(
                             _progress.value = remaining.toFloat() / breakDuration
                         }
                     }
+                    if (previousState == SpaceState.WORKING && _spaceState.value == SpaceState.BREAK) {
+                        val finishedSession = _currentSessionCount.value
+                        if (finishedSession == 1) {
+                            // 1セッション目終了
+                            addRecord(
+                                Record(
+                                    userId = userId,
+                                    roomId = space.spaceId,
+                                    roomName = space.spaceName,
+                                    startTime = space.startTime,
+                                    endTime = System.currentTimeMillis(),
+                                    durationMinutes = 25,
+                                    createdAt = space.createdAt
+                                ),
+                                commentList = myComments.value
+                            )
+                        } else {
+                            // 2セッション目以降終了
+                            upDateRecord(newCommentList = myComments.value)
+                        }
+                    }
+
+                    previousState = _spaceState.value
                     delay(1000)  // 1秒ごとに更新する
                 }
             }
@@ -203,6 +233,14 @@ constructor(
         }
     }
 
+    fun getMyComments() {
+        viewModelScope.launch {
+            commentRepository.getMyCommentsFlow(userId).collect { myCommentList ->
+                _myComments.value = myCommentList
+            }
+        }
+    }
+
     fun observeSpace(spaceId: String) {
         // 既存の監視をキャンセルしてから新しい Flow を収集
         viewModelScope.launch {
@@ -216,4 +254,40 @@ constructor(
             }
         }
     }
+
+    fun addRecord(record: Record, commentList: List<Comment?>? = null) {
+        viewModelScope.launch {
+            val finalRecord = if (commentList != null) {
+                record.copy(taskDescription = commentsToTaskDescription(commentList))
+            } else {
+                record
+            }
+
+            val docRef = recordRepository.addRecordReturnDocRef(finalRecord)
+            currentRecordId = docRef.id
+        }
+    }
+
+
+    fun upDateRecord(newCommentList: List<Comment?>) {
+        val recordId = currentRecordId ?: return
+
+        val updatedRecord = Record(
+            endTime = System.currentTimeMillis(),
+            durationMinutes = currentSessionCount.value * 25,
+            taskDescription = commentsToTaskDescription(newCommentList)
+        )
+
+        viewModelScope.launch {
+            recordRepository.updateRecord(recordId, updatedRecord)
+        }
+    }
+
+
+    private fun commentsToTaskDescription(commentList: List<Comment?>): List<String> {
+        return commentList
+            .sortedBy { it?.postedAt }
+            .map { it?.content ?: "" }
+    }
+
 }
