@@ -1,5 +1,6 @@
 package com.belltree.pomodoroshareapp.Space
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -46,11 +47,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.belltree.pomodoroshareapp.domain.models.Comment
 import com.belltree.pomodoroshareapp.domain.models.Space
+import com.belltree.pomodoroshareapp.domain.models.SpaceState
 import com.belltree.pomodoroshareapp.domain.models.User
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun SpaceScreen(
@@ -64,6 +67,12 @@ fun SpaceScreen(
     var user by remember { mutableStateOf<User?>(null) }
     val participantsName = spaceViewModel.userNames.collectAsState().value
     val ownerName = spaceViewModel.ownerName.collectAsState().value
+    val timeUntilStart by spaceViewModel.timeUntilStartMillis.collectAsState()
+    val progress by spaceViewModel.progress.collectAsState()
+    val isRunning by spaceViewModel.isRunning.collectAsState()
+    val remainingTime by spaceViewModel.remainingTimeMillis.collectAsState()
+    val currentSessionCount by spaceViewModel.currentSessionCount.collectAsState()
+    val spaceState by spaceViewModel.spaceState.collectAsState()
 
     LaunchedEffect(Unit) {
         user = spaceViewModel.getCurrentUserById()
@@ -99,6 +108,10 @@ fun SpaceScreen(
                     .padding(bottom = 12.dp),
                 textAlign = TextAlign.Center
             )
+            if (timeUntilStart != null) {
+                // 開始前カウントダウン表示
+                Text("開始まであと ${timeUntilStart!! / 1000} 秒")
+            }
 
             Box(
                 modifier = Modifier
@@ -109,10 +122,34 @@ fun SpaceScreen(
                 TimerCircle(
                     radius = 110.dp,
                     strokeWidth = 6.dp,
+                    progress = progress,
                     progressColor = Color(0xFF285D9D),
                     trackColor = Color(0xFFBBD0EE),
-                    timeText = "25:00"
+                    remainingTimeMillis = remainingTime
                 )
+            }
+            Text(
+                text = when (spaceState) {
+                    SpaceState.WAITING -> "待機中"
+                    SpaceState.WORKING -> "作業中"
+                    SpaceState.BREAK -> "休憩中"
+                    SpaceState.FINISHED -> "終了"
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                textAlign = TextAlign.Center
+            )
+            if (spaceState == SpaceState.WORKING || spaceState == SpaceState.BREAK) {
+                Text(
+                    text = "現在のセッション：${currentSessionCount}/${space.sessionCount}",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .size(20.dp),
+                    textAlign = TextAlign.Center
+                )
+            } else {
+                Spacer(Modifier.height(20.dp))
             }
 
             Spacer(Modifier.height(8.dp))
@@ -150,15 +187,19 @@ fun SpaceScreen(
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
 private fun TimerCircle(
     radius: Dp,
     strokeWidth: Dp,
+    progress: Float,
     progressColor: Color,
     trackColor: Color,
-    timeText: String,
+    remainingTimeMillis: Long,
 ) {
     val sizePx = radius * 2
+    val minutes = TimeUnit.MILLISECONDS.toMinutes(remainingTimeMillis)
+    val seconds = TimeUnit.MILLISECONDS.toSeconds(remainingTimeMillis) % 60
     Box(contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.size(sizePx)) {
             val stroke = Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Round)
@@ -166,14 +207,14 @@ private fun TimerCircle(
             drawArc(
                 color = progressColor,
                 startAngle = -90f,
-                sweepAngle = 270f,
+                sweepAngle = 360f * progress,
                 useCenter = false,
                 style = stroke
             )
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = timeText,
+                text = String.format("%02d:%02d", minutes, seconds),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
