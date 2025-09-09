@@ -71,7 +71,7 @@ fun MakeSpaceScreen(
             TextField(
                 value = startMinutesText,
                 onValueChange = { startMinutesText = it.filter { ch -> ch.isDigit() }.take(4) },
-                label = { Text("開始までの分 (例: 5)") },
+                label = { Text("開始時刻を入力してください") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
