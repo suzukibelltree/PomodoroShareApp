@@ -20,6 +20,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -43,6 +46,8 @@ fun HomeScreen(
 ) {
 
 	val spaces by homeViewModel.spaces.collectAsState()
+	var keyword by rememberSaveable { mutableStateOf("") }
+	val filteredSpaces = if (keyword.isBlank()) spaces else spaces.filter { it.spaceName.contains(keyword, ignoreCase = true) }
 	LaunchedEffect(homeViewModel, spaces.isEmpty()){
 		if(spaces.isEmpty()){
 			homeViewModel.getUnfinishedSpaces()
@@ -63,13 +68,22 @@ fun HomeScreen(
 			modifier = Modifier
 				.fillMaxSize()
 				.padding(innerPadding)
-		){
-			LazyColumn(
-				modifier = Modifier.fillMaxSize(),
-				contentPadding = PaddingValues(8.dp),
+		) {
+			Column(
+				modifier = Modifier
+					.fillMaxSize()
 			) {
-				items(spaces) { item ->
-					HomeRow(space = item,  onSpaceClick = { id -> onNavigateSpace(id) })
+				SearchBar(
+					keyword = keyword,
+					onKeywordChange = { keyword = it }
+				)
+				LazyColumn(
+					modifier = Modifier.fillMaxSize(),
+					contentPadding = PaddingValues(8.dp),
+				) {
+					items(filteredSpaces) { item ->
+						HomeRow(space = item, onSpaceClick = { id -> onNavigateSpace(id) })
+					}
 				}
 			}
 			FloatingActionButton(
