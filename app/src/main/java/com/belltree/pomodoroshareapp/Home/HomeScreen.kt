@@ -47,7 +47,14 @@ fun HomeScreen(
 
 	val spaces by homeViewModel.spaces.collectAsState()
 	var keyword by rememberSaveable { mutableStateOf("") }
-	val filteredSpaces = if (keyword.isBlank()) spaces else spaces.filter { it.spaceName.contains(keyword, ignoreCase = true) }
+	var selectedLabel: SpaceState? by rememberSaveable { mutableStateOf<SpaceState?>(null) }
+	val filteredSpaces = spaces
+		.filter { space ->
+			keyword.isBlank() || space.spaceName.contains(keyword, ignoreCase = true)
+		}
+		.filter { space ->
+			selectedLabel == null || space.spaceState == selectedLabel
+		}
 	LaunchedEffect(homeViewModel, spaces.isEmpty()){
 		if(spaces.isEmpty()){
 			homeViewModel.getUnfinishedSpaces()
@@ -76,6 +83,10 @@ fun HomeScreen(
 				SearchBar(
 					keyword = keyword,
 					onKeywordChange = { keyword = it }
+				)
+				LabelBar(
+					selectedLabel = selectedLabel,
+					onSelectedLabelChange = { selectedLabel = it }
 				)
 				LazyColumn(
 					modifier = Modifier.fillMaxSize(),
