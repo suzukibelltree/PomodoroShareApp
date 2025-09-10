@@ -3,6 +3,7 @@ package com.belltree.pomodoroshareapp.domain.models
 data class Space(
     val spaceId: String = "",
     val ownerId: String = "",
+    val ownerName: String = "",
     val spaceName: String = "",
     val spaceState: SpaceState = SpaceState.WAITING,
     val timerState: TimerState = TimerState.STOPPED,

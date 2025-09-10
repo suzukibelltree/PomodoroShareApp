@@ -153,6 +153,7 @@ fun MakeSpaceScreen(
                             spaceId = "",
                             spaceName = roomName,
                             ownerId = user?.uid ?: "",
+                            ownerName = user?.displayName ?: "", //firebaseのdisplayName要デバック
                             startTime = startTime,
                             sessionCount = 4,
                             participantsId = emptyList(),
