@@ -1,22 +1,32 @@
 package com.belltree.pomodoroshareapp.MakeSpace
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,22 +38,25 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.belltree.pomodoroshareapp.domain.models.Space
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Suppress("unused")
 fun MakeSpaceScreen(
     modifier: Modifier = Modifier,
     makeSpaceViewModel: MakeSpaceViewModel,
     onNavigateHome: () -> Unit = {}
 ) {
     var roomName by remember { mutableStateOf("") }
-    var startMinutesText by remember { mutableStateOf("") } // 分単位入力
     var error by remember { mutableStateOf<String?>(null) }
     var isPrivate by remember { mutableStateOf(false) }
-
+    val zone = ZoneId.of("Asia/Tokyo") // ユーザーが入力したタイムゾーン
+    var userInput by remember { mutableStateOf(LocalDateTime.now(zone)) } //ユーザーの指定したタイムゾーンの現在時刻
+    val timeState = rememberTimePickerState(is24Hour = true) //時計のホップアップと紐づいてる
+    var showDialog by remember { mutableStateOf(false) }
     val user = makeSpaceViewModel.user
-
 
     Scaffold(
         topBar = {
@@ -68,14 +81,45 @@ fun MakeSpaceScreen(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
-            TextField(
-                value = startMinutesText,
-                onValueChange = { startMinutesText = it.filter { ch -> ch.isDigit() }.take(4) },
-                label = { Text("開始時刻を入力してください") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+            Row {
+                listOf(15, 25, 45).forEach { m ->
+                    AssistChip(onClick = {
+                        timeState.minute = m % 60 // 必要に応じ丸め
+                    }, label = { Text("${m}分") })
+                }
+            }
+
+            // 表示用フィールド + ダイアログ
+            OutlinedTextField(
+                value = "%02d:%02d".format(timeState.hour, timeState.minute),
+                onValueChange = {/*ホップアップで変数は変更されるのでここでかえるひつようなし*/},
+                readOnly = true,
+                trailingIcon = {
+                    IconButton({ showDialog = true }) { Icon(Icons.Default.AccessTime, null) }
+                }
             )
+
+            if (showDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDialog = false },
+                    confirmButton = {
+                        TextButton({
+                            // TimePicker の選択値を LocalDateTime に反映
+                            userInput = LocalDateTime.of(
+                                userInput.year,
+                                userInput.monthValue,
+                                userInput.dayOfMonth,
+                                timeState.hour,
+                                timeState.minute
+                            )
+                            showDialog = false
+                        }) { Text("OK") }
+                    },
+                    dismissButton = { TextButton({ showDialog = false }) { Text("キャンセル") } },
+                    text = { TimePicker(state = timeState) }
+                )
+            }
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -99,14 +143,17 @@ fun MakeSpaceScreen(
                         error = "部屋名を入力してください"
                         return@Button
                     }
-                    val minutes = startMinutesText.toLongOrNull() ?: 0L
-                    val startTime =
-                        if (minutes > 0) System.currentTimeMillis() + minutes * 60_000 else System.currentTimeMillis()
+                    // ユーザー入力 (ローカル時刻 + タイムゾーン) を UTC エポックミリ秒に変換
+                    val startTime = userInput
+                        .atZone(zone)
+                        .toInstant()
+                        .toEpochMilli()
                     makeSpaceViewModel.createSpace(
                         Space(
                             spaceId = "",
                             spaceName = roomName,
                             ownerId = user?.uid ?: "",
+                            ownerName = user?.displayName ?: "", //firebaseのdisplayName要デバック
                             startTime = startTime,
                             sessionCount = 4,
                             participantsId = emptyList(),

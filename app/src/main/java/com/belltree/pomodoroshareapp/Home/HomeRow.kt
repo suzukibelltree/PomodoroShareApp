@@ -17,6 +17,9 @@ import androidx.compose.ui.unit.dp
 import com.belltree.pomodoroshareapp.domain.models.Space
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.clickable
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun HomeRow(
@@ -76,10 +79,23 @@ private fun SpaceFooter(createdAt: Long) {
         horizontalArrangement = Arrangement.Start
     ) {
         Text(
-            text = createdAt.toString(),
+            text = formatEpochMillis(createdAt),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+
+//zoneIdは仮
+private fun formatEpochMillis(millis: Long, zoneId: ZoneId = ZoneId.of("Asia/Tokyo")): String {
+    if (millis <= 0L) return "-"
+    return try {
+        val instant = Instant.ofEpochMilli(millis)
+        val local = instant.atZone(zoneId).toLocalDateTime()
+        local.format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"))
+    } catch (e: Exception) {
+        millis.toString()
     }
 }
 
