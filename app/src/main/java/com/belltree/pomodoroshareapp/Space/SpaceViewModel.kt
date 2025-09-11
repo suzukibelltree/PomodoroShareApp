@@ -11,6 +11,7 @@ import com.belltree.pomodoroshareapp.domain.repository.CommentRepository
 import com.belltree.pomodoroshareapp.domain.repository.RecordRepository
 import com.belltree.pomodoroshareapp.domain.repository.SpaceRepository
 import com.belltree.pomodoroshareapp.domain.repository.UserRepository
+import com.belltree.pomodoroshareapp.notification.NotificationHelper
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
@@ -29,7 +30,8 @@ constructor(
     private val commentRepository: CommentRepository,
     private val spaceRepository: SpaceRepository,
     private val userRepository: UserRepository,
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val notificationHelper: NotificationHelper
 ) : ViewModel() {
     val userId: String = auth.currentUser?.uid ?: "Unknown"
     private val _records = MutableStateFlow<List<Record>>(emptyList())
@@ -72,10 +74,11 @@ constructor(
     val currentSessionCount: StateFlow<Int> = _currentSessionCount
 
     // スペースの状態 (待機中、作業中、休憩中、終了)
-    private val _spaceState = MutableStateFlow(SpaceState.WORKING)
+    private val _spaceState = MutableStateFlow(SpaceState.WAITING)
     val spaceState: StateFlow<SpaceState> = _spaceState
 
     private var timerJob: Job? = null
+    private var backgroundNotificationJob: Job? = null
 
     // セッションの数
     private var sessionCount = 0
@@ -285,9 +288,25 @@ constructor(
 
 
     private fun commentsToTaskDescription(commentList: List<Comment?>): List<String> {
-        return commentList
-            .sortedBy { it?.postedAt }
-            .map { it?.content ?: "" }
+        return commentList.sortedBy { it?.postedAt }.map { it?.content ?: "" }
     }
 
+    fun onScreenBackgrounded() {
+        backgroundNotificationJob?.cancel()
+        backgroundNotificationJob =
+            viewModelScope.launch {
+                delay(30_000) // 30秒後に通知
+                notificationHelper.showNotification("ポモドーロタイマー", "作業に戻ってください！")
+            }
+    }
+
+    fun onScreenForegrounded() {
+        backgroundNotificationJob?.cancel()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        timerJob?.cancel()
+        backgroundNotificationJob?.cancel()
+    }
 }

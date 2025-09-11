@@ -9,8 +9,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import com.belltree.pomodoroshareapp.notification.NotificationPermissionManager
 import com.belltree.pomodoroshareapp.ui.theme.PomodoroShareAppTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 object AppContextHolder {
     lateinit var appContext: Context
@@ -21,9 +23,17 @@ object AppContextHolder {
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var notificationPermissionManager: NotificationPermissionManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // 通知権限を要求する
+        notificationPermissionManager.requestNotificationPermission(this)
+
         setContent {
             PomodoroShareAppTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {

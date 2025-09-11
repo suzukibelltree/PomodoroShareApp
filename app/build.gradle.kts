@@ -98,6 +98,11 @@ dependencies {
 
     // For Gemini API
     implementation(libs.generativeai)
+
+    // For Lifecycle
+    implementation(libs.androidx.lifecycle.extensions)
+
+    implementation(libs.androidx.work.runtime.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
