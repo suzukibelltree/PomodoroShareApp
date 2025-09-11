@@ -29,6 +29,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -45,6 +46,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.belltree.pomodoroshareapp.domain.models.Comment
 import com.belltree.pomodoroshareapp.domain.models.Space
 import com.belltree.pomodoroshareapp.domain.models.SpaceState
@@ -73,6 +75,11 @@ fun SpaceScreen(
     val remainingTime by spaceViewModel.remainingTimeMillis.collectAsState()
     val currentSessionCount by spaceViewModel.currentSessionCount.collectAsState()
     val spaceState by spaceViewModel.spaceState.collectAsState()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    val lifecycleObserver = remember {
+        AppLifecycleObserver(spaceViewModel)
+    }
 
     LaunchedEffect(Unit) {
         user = spaceViewModel.getCurrentUserById()
@@ -82,6 +89,16 @@ fun SpaceScreen(
     LaunchedEffect(space.participantsId) {
         spaceViewModel.fetchUserNames(space.participantsId)
     }
+
+    DisposableEffect(lifecycleOwner) {
+        lifecycleObserver.updateSpaceScreenActive(true)
+        lifecycleOwner.lifecycle.addObserver(lifecycleObserver)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(lifecycleObserver)
+        }
+    }
+
 
     Scaffold(
         topBar = {
