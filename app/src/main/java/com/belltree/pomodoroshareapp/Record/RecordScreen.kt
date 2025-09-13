@@ -32,7 +32,7 @@ fun RecordScreen(
                 .padding(innerPadding)
         ) {
             Text(
-                text = "ここにGeminiのレポートを表示する予定"
+                text = "ここにGeminiのレポートを表示する予定です！！"
             )
         }
     }
