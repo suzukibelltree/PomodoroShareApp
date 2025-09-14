@@ -37,7 +37,7 @@ fun HomeRow(
         onClick = {onSpaceClick(space.spaceId)}
     ) {
         Column(Modifier.padding(16.dp)) {
-            SpaceHeader(username = space.ownerId)
+            SpaceHeader(username = space.ownerName)
             SpaceContent(content = space.spaceName)
             SpaceFooter(createdAt = space.createdAt)
         }

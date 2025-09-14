@@ -46,12 +46,5 @@ class HomeViewModel @Inject constructor(
     }
 
     fun refresh() = load()
-
-
-    fun createSpace(space: Space) {
-        viewModelScope.launch {
-            spaceRepository.createSpace(space)
-        }
-    }
 }
 
