@@ -69,6 +69,8 @@ class SpaceRepositoryImpl @Inject constructor(
         val ownerId: String = getField("ownerId") ?: ""
         val spaceName: String = getField("spaceName") ?: ""
 
+        val ownerName: String = getField("ownerName") ?: ""
+
         val spaceStateStr: String? = getField("spaceState")
         val spaceState: SpaceState = spaceStateStr?.let {
             runCatching { SpaceState.valueOf(it) }.getOrElse { SpaceState.WAITING }
@@ -97,6 +99,7 @@ class SpaceRepositoryImpl @Inject constructor(
         return Space(
             spaceId = spaceId,
             ownerId = ownerId,
+            ownerName = ownerName,
             spaceName = spaceName,
             spaceState = spaceState,
             timerState = timerState,

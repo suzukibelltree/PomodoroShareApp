@@ -28,6 +28,7 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.belltree.pomodoroshareapp.domain.models.Space
+import com.belltree.pomodoroshareapp.domain.models.User
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -56,7 +58,11 @@ fun MakeSpaceScreen(
     var userInput by remember { mutableStateOf(LocalDateTime.now(zone)) } //ユーザーの指定したタイムゾーンの現在時刻
     val timeState = rememberTimePickerState(is24Hour = true) //時計のホップアップと紐づいてる
     var showDialog by remember { mutableStateOf(false) }
-    val user = makeSpaceViewModel.user
+    var user by remember { mutableStateOf<User?>(null) }
+
+    LaunchedEffect(Unit) {
+        user = makeSpaceViewModel.getCurrentUserById()
+    }
 
     Scaffold(
         topBar = {
@@ -152,8 +158,8 @@ fun MakeSpaceScreen(
                         Space(
                             spaceId = "",
                             spaceName = roomName,
-                            ownerId = user?.uid ?: "",
-                            ownerName = user?.displayName ?: "", //firebaseのdisplayName要デバック
+                            ownerId = user?.userId ?: "01",
+                            ownerName = user?.userName ?: "ゲスト", //firebaseのdisplayName要デバック
                             startTime = startTime,
                             sessionCount = 4,
                             participantsId = emptyList(),
