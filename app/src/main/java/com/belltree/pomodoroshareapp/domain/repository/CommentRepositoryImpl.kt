@@ -41,21 +41,24 @@ class CommentRepositoryImpl @Inject constructor(
             awaitClose { listener.remove() }
         }
 
-    // 自分が投稿したコメントの一覧を取得する(RecordViewModelで使用する?)
-    override fun getMyCommentsFlow(userId: String): Flow<List<Comment>> = callbackFlow {
-        val listener = db.collectionGroup("comments")
-            .whereEqualTo("userId", userId) // 自分のuserIdのコメントだけ取得
-            .orderBy("postedAt")
-            .addSnapshotListener { snapshot, e ->
-                if (e != null) {
-                    close(e)
-                    return@addSnapshotListener
+    // その部屋で自分が投稿したコメントの一覧を取得する(SpaceViewModelで使用する)
+    override fun getMyCommentsFlow(spaceId: String, userId: String): Flow<List<Comment>> =
+        callbackFlow {
+            val listener = db.collection("spaces")
+                .document(spaceId)
+                .collection("comments")
+                .whereEqualTo("userId", userId)
+                .orderBy("postedAt")
+                .addSnapshotListener { snapshot, e ->
+                    if (e != null) {
+                        close(e)
+                        return@addSnapshotListener
+                    }
+                    if (snapshot != null) {
+                        val comments = snapshot.toObjects(Comment::class.java)
+                        trySend(comments).isSuccess
+                    }
                 }
-                if (snapshot != null) {
-                    val comments = snapshot.toObjects(Comment::class.java)
-                    trySend(comments)
-                }
-            }
-        awaitClose { listener.remove() }
-    }
+            awaitClose { listener.remove() }
+        }
 }

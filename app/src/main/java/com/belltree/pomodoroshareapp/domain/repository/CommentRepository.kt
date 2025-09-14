@@ -6,5 +6,5 @@ import kotlinx.coroutines.flow.Flow
 interface CommentRepository {
     fun addComment(spaceId: String, comment: Comment)
     fun getCommentsFlow(spaceId: String): Flow<List<Comment>>
-    fun getMyCommentsFlow(userId: String): Flow<List<Comment>>
+    fun getMyCommentsFlow(spaceId: String, userId: String): Flow<List<Comment>>
 }
