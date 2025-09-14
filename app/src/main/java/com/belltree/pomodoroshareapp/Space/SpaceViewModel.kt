@@ -1,5 +1,6 @@
 package com.belltree.pomodoroshareapp.Space
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.belltree.pomodoroshareapp.domain.models.Comment
@@ -20,6 +21,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -84,7 +86,7 @@ constructor(
     private var sessionCount = 0
 
     // 作業時間と休憩時間 (ミリ秒)
-    private var workDuration = 25 * 60 * 1000L
+    private var workDuration = 1 * 60 * 1000L
     private var breakDuration = 5 * 60 * 1000L
 
     // スペースの開始時間 (ミリ秒)
@@ -191,21 +193,28 @@ constructor(
                         val finishedSession = _currentSessionCount.value
                         if (finishedSession == 1) {
                             // 1セッション目終了
-                            addRecord(
-                                Record(
-                                    userId = userId,
-                                    roomId = space.spaceId,
-                                    roomName = space.spaceName,
-                                    startTime = space.startTime,
-                                    endTime = System.currentTimeMillis(),
-                                    durationMinutes = 25,
-                                    createdAt = space.createdAt
-                                ),
-                                commentList = myComments.value
+                            val newRecord = Record(
+                                userId = userId,
+                                roomId = space.spaceId,
+                                roomName = space.spaceName,
+                                startTime = space.startTime,
+                                endTime = System.currentTimeMillis(),
+                                durationMinutes = 25,
+                                createdAt = space.createdAt
                             )
+                            viewModelScope.launch {
+                                val myCommentList = getMyCommentsOnce(space.spaceId)
+                                _myComments.value = myCommentList
+                                addRecord(newRecord, commentList = myCommentList)
+                            }
                         } else {
                             // 2セッション目以降終了
-                            upDateRecord(newCommentList = myComments.value)
+                            viewModelScope.launch {
+                                val myCommentList = getMyCommentsOnce(space.spaceId)
+                                _myComments.value = myCommentList
+                                upDateRecord(newCommentList = myCommentList)
+                                Log.d("hoge", "Record updated")
+                            }
                         }
                     }
 
@@ -236,12 +245,11 @@ constructor(
         }
     }
 
-    fun getMyComments() {
-        viewModelScope.launch {
-            commentRepository.getMyCommentsFlow(userId).collect { myCommentList ->
-                _myComments.value = myCommentList
-            }
-        }
+    // そのスペースで自分が投稿したコメントの一覧を取得
+    suspend fun getMyCommentsOnce(spaceId: String): List<Comment> {
+        return commentRepository
+            .getMyCommentsFlow(spaceId, userId)
+            .first() // 常に監視するのではないのでfirst()で取得
     }
 
     fun observeSpace(spaceId: String) {
