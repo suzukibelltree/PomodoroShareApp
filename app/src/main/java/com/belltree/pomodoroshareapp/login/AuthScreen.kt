@@ -1,4 +1,4 @@
-package com.belltree.pomodoroshareapp.Login
+package com.belltree.pomodoroshareapp.login
 
 import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult

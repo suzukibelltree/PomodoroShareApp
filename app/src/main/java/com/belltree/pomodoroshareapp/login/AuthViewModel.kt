@@ -1,4 +1,4 @@
-package com.belltree.pomodoroshareapp.Login
+package com.belltree.pomodoroshareapp.login
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
