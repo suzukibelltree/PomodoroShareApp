@@ -1,7 +1,10 @@
 package com.belltree.pomodoroshareapp.Space
 
 import android.annotation.SuppressLint
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,8 +22,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -41,17 +43,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.belltree.pomodoroshareapp.R
 import com.belltree.pomodoroshareapp.domain.models.Comment
 import com.belltree.pomodoroshareapp.domain.models.Space
 import com.belltree.pomodoroshareapp.domain.models.SpaceState
 import com.belltree.pomodoroshareapp.domain.models.User
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
+import com.belltree.pomodoroshareapp.ui.theme.PomodoroAppColors
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -68,13 +76,15 @@ fun SpaceScreen(
     val comments = spaceViewModel.comments.collectAsState().value
     var user by remember { mutableStateOf<User?>(null) }
     val participantsName = spaceViewModel.userNames.collectAsState().value
-    val ownerName = spaceViewModel.ownerName.collectAsState().value
     val timeUntilStart by spaceViewModel.timeUntilStartMillis.collectAsState()
     val progress by spaceViewModel.progress.collectAsState()
     val isRunning by spaceViewModel.isRunning.collectAsState()
     val remainingTime by spaceViewModel.remainingTimeMillis.collectAsState()
     val currentSessionCount by spaceViewModel.currentSessionCount.collectAsState()
     val spaceState by spaceViewModel.spaceState.collectAsState()
+    val clipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
+    var showDialog by remember { mutableStateOf(false) }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     val lifecycleObserver = remember {
@@ -99,6 +109,10 @@ fun SpaceScreen(
         }
     }
 
+    BackHandler {
+        showDialog = true
+    }
+
 
     Scaffold(
         topBar = {
@@ -106,6 +120,17 @@ fun SpaceScreen(
                 title = space.spaceName,
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
                 onNavigationClick = onNavigateHome,
+                actionIcons = listOf(
+                    Icons.Default.ContentCopy to {
+                        clipboardManager.setText(AnnotatedString(space.spaceId))
+                        Toast.makeText(
+                            context,
+                            "スペースIDをコピーしました",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                )
             )
         }
     ) { innerPadding ->
@@ -113,21 +138,31 @@ fun SpaceScreen(
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(vertical = 8.dp),
+                .padding(vertical = 16.dp),
             verticalArrangement = Arrangement.Top,
         ) {
-            val startLabel = formatDateTimeForLabel(space.startTime)
-            Text(
-                text = "開始予定時刻\n $startLabel",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 12.dp),
-                textAlign = TextAlign.Center
-            )
-            if (timeUntilStart != null) {
-                // 開始前カウントダウン表示
-                Text("開始まであと ${timeUntilStart!! / 1000} 秒")
+            // スペースの開始時刻表示（開始1時間前より前の場合のみ表示）
+            val oneHourInMillis = 60 * 60 * 1000
+            val secondUntilStart = timeUntilStart / 1000
+            val minutes = secondUntilStart / 60
+            val seconds = secondUntilStart % 60
+            if (spaceState == SpaceState.WAITING && timeUntilStart > oneHourInMillis) {
+                val startLabel = formatDateTimeForLabel(space.startTime)
+                Text(
+                    text = "開始時刻\n $startLabel",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+            } else if (spaceState == SpaceState.WAITING) { // 開始1時間前以内の場合はカウントダウン表示
+                Text(
+                    text = "開始まであと\n%02d分%02d秒".format(minutes, seconds),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+            } else {
+                Spacer(Modifier.height(16.dp))
             }
 
             Box(
@@ -140,36 +175,21 @@ fun SpaceScreen(
                     radius = 110.dp,
                     strokeWidth = 6.dp,
                     progress = progress,
-                    progressColor = Color(0xFF285D9D),
-                    trackColor = Color(0xFFBBD0EE),
-                    remainingTimeMillis = remainingTime
+                    progressColor = when (spaceState) {
+                        SpaceState.WAITING -> PomodoroAppColors.SkyBlue
+                        SpaceState.WORKING -> PomodoroAppColors.CoralOrange
+                        SpaceState.BREAK -> PomodoroAppColors.LimeGreen
+                        SpaceState.FINISHED -> PomodoroAppColors.LimeGreen
+                    },
+                    trackColor = Color.LightGray,
+                    remainingTimeMillis = remainingTime,
+                    spaceState = spaceState,
+                    currentSessionCount = currentSessionCount,
+                    sessionCount = space.sessionCount
                 )
-            }
-            Text(
-                text = when (spaceState) {
-                    SpaceState.WAITING -> "待機中"
-                    SpaceState.WORKING -> "作業中"
-                    SpaceState.BREAK -> "休憩中"
-                    SpaceState.FINISHED -> "終了"
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                textAlign = TextAlign.Center
-            )
-            if (spaceState == SpaceState.WORKING || spaceState == SpaceState.BREAK) {
-                Text(
-                    text = "現在のセッション：${currentSessionCount}/${space.sessionCount}",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .size(20.dp),
-                    textAlign = TextAlign.Center
-                )
-            } else {
-                Spacer(Modifier.height(20.dp))
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(16.dp))
 
             var selectedTab by remember { mutableStateOf(0) }
             TabRow(selectedTabIndex = selectedTab, containerColor = Color(0xFFE6E6E6)) {
@@ -197,10 +217,18 @@ fun SpaceScreen(
             } else {
                 ParticipantSection(
                     participantsName = participantsName,
-                    ownerName = ownerName
                 )
             }
         }
+    }
+    if (showDialog) {
+        ConfirmDialog(
+            ondismiss = { showDialog = false },
+            onConfirm = {
+                showDialog = false
+                onNavigateHome()
+            }
+        )
     }
 }
 
@@ -213,6 +241,9 @@ private fun TimerCircle(
     progressColor: Color,
     trackColor: Color,
     remainingTimeMillis: Long,
+    spaceState: SpaceState,
+    currentSessionCount: Int,
+    sessionCount: Int
 ) {
     val sizePx = radius * 2
     val minutes = TimeUnit.MILLISECONDS.toMinutes(remainingTimeMillis)
@@ -231,11 +262,35 @@ private fun TimerCircle(
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
+                text = when (spaceState) {
+                    SpaceState.WAITING -> "待機中"
+                    SpaceState.WORKING -> "作業中"
+                    SpaceState.BREAK -> "休憩中"
+                    SpaceState.FINISHED -> "終了"
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                textAlign = TextAlign.Center,
+                fontSize = 16.sp
+            )
+            Text(
                 text = String.format("%02d:%02d", minutes, seconds),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
+            if (spaceState == SpaceState.WORKING || spaceState == SpaceState.BREAK) {
+                Text(
+                    text = "現在のセッション：${currentSessionCount}/${sessionCount}",
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    fontSize = 12.sp
+                )
+            } else {
+                Spacer(Modifier.height(20.dp))
+            }
         }
     }
 }
@@ -306,8 +361,9 @@ private fun CommentSection(
     }
 }
 
+// TODO: 引数をList<String>からList<User>に変更する
 @Composable
-private fun ParticipantSection(participantsName: List<String>, ownerName: String) {
+private fun ParticipantSection(participantsName: List<String>) {
     Column(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
@@ -317,7 +373,7 @@ private fun ParticipantSection(participantsName: List<String>, ownerName: String
         ) {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(participantsName) { name ->
-                    ParticipantRow(name = name, isOwner = name == ownerName)
+                    ParticipantRow(name = name)
                 }
             }
         }
@@ -325,28 +381,23 @@ private fun ParticipantSection(participantsName: List<String>, ownerName: String
 }
 
 @Composable
-private fun ParticipantRow(name: String, isOwner: Boolean) {
+private fun ParticipantRow(name: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (isOwner) {
-            Icon(
-                imageVector = Icons.Default.Star,
-                contentDescription = "部屋主",
-                tint = Color(0xFFFFD700),
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-        } else {
-            Spacer(modifier = Modifier.width(24.dp)) // アイコン分のスペースを空ける
-        }
+        Image(
+            painter = painterResource(R.drawable.generic_avatar),
+            contentDescription = "仮の参加者アイコン",
+            modifier = Modifier.size(36.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = name,
             style = MaterialTheme.typography.bodyMedium,
-            color = if (isOwner) Color(0xFF285D9D) else Color.Unspecified // 部屋主は青色
+            color = Color.Unspecified
         )
     }
 }
