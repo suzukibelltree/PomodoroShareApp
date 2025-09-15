@@ -15,4 +15,5 @@ object PomodoroAppColors {
     val LimeGreen = Color(0xFFC9E472)
     val SkyBlue = Color(0xFF8ECFE3)
     val TurquoiseBlue = Color(0xFF48B3D3)
+    val LightGray = Color(0xFFF3F3F3)
 }

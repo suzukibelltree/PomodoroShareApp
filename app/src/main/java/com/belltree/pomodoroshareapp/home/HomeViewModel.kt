@@ -1,9 +1,12 @@
-package com.belltree.pomodoroshareapp.Home
+package com.belltree.pomodoroshareapp.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.belltree.pomodoroshareapp.domain.models.Space
+import com.belltree.pomodoroshareapp.domain.models.User
 import com.belltree.pomodoroshareapp.domain.repository.SpaceRepository
+import com.belltree.pomodoroshareapp.domain.repository.UserRepository
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,8 +16,14 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val spaceRepository: SpaceRepository
+    private val spaceRepository: SpaceRepository,
+    private val userRepository: UserRepository,
+    private val auth: FirebaseAuth,
 ) : ViewModel() {
+    val userId: String = auth.currentUser?.uid ?: "Unknown"
+
+    private val _ownerName = MutableStateFlow<String>("")
+    val ownerName: StateFlow<String> = _ownerName
     private val _spaces = MutableStateFlow<List<Space>>(emptyList())
     val spaces: StateFlow<List<Space>> = _spaces
 
@@ -45,6 +54,12 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun refresh() = load()
+    suspend fun getCurrentUserById(): User {
+        val u = userRepository.getUserById(userId)
+        return User(
+            userId = u?.userId ?: "Unknown",
+            userName = u?.userName ?: "Unknown"
+        )
+    }
 }
 

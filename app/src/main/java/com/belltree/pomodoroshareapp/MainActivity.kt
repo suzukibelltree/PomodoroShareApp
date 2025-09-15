@@ -9,10 +9,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import com.belltree.pomodoroshareapp.notification.NotificationPermissionManager
 import com.belltree.pomodoroshareapp.ui.theme.PomodoroShareAppTheme
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 object AppContextHolder {
     lateinit var appContext: Context
@@ -35,7 +36,7 @@ class MainActivity : ComponentActivity() {
         notificationPermissionManager.requestNotificationPermission(this)
 
         setContent {
-            PomodoroShareAppTheme {
+            PomodoroShareAppTheme{
                 Surface(modifier = Modifier.fillMaxSize()) {
                     AppNavHost()
                 }

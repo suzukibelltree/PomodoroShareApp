@@ -39,7 +39,7 @@ fun PomodoroShareAppTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
+    val baseColorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -48,6 +48,9 @@ fun PomodoroShareAppTheme(
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
+
+    // Remove surfaceTint to avoid tonal overlays influencing surfaces/cards
+    val colorScheme = baseColorScheme.copy(surfaceTint = androidx.compose.ui.graphics.Color.Unspecified)
 
     MaterialTheme(
         colorScheme = colorScheme,

@@ -10,18 +10,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.belltree.pomodoroshareapp.Home.HomeScreen
-import com.belltree.pomodoroshareapp.Home.HomeViewModel
-import com.belltree.pomodoroshareapp.Login.AuthScreen
-import com.belltree.pomodoroshareapp.Login.AuthViewModel
-import com.belltree.pomodoroshareapp.MakeSpace.MakeSpaceScreen
-import com.belltree.pomodoroshareapp.MakeSpace.MakeSpaceViewModel
+import com.belltree.pomodoroshareapp.home.HomeScreen
+import com.belltree.pomodoroshareapp.home.HomeViewModel
+import com.belltree.pomodoroshareapp.login.AuthScreen
+import com.belltree.pomodoroshareapp.login.AuthViewModel
+import com.belltree.pomodoroshareapp.makeSpace.MakeSpaceScreen
 import com.belltree.pomodoroshareapp.Record.RecordScreen
 import com.belltree.pomodoroshareapp.Record.RecordViewModel
 import com.belltree.pomodoroshareapp.Setting.SettingScreen
 import com.belltree.pomodoroshareapp.Setting.SettingViewModel
 import com.belltree.pomodoroshareapp.Space.SpaceScreen
 import com.belltree.pomodoroshareapp.Space.SpaceViewModel
+import com.belltree.pomodoroshareapp.makeSpace.MakeSpaceViewModel
 
 // 画面遷移をここで管理する
 @Composable
@@ -104,5 +104,15 @@ fun AppNavHost() {
                     onNavigateHome = { navController.navigate("home") }
             )
         }
+
+//        composable("contact") {
+//            val viewModel: ContactViewModel = hiltViewModel()
+//            ContactScreen(
+//                    contactViewModel = viewModel,
+//                    onNavigateHome = { navController.navigate("home") },
+//                    onNavigateSettings = { navController.navigate("settings") },
+//                    onNavigateSpace = { id -> navController.navigate("space/$id") }
+//            )
+//        }
     }
 }
