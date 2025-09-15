@@ -184,31 +184,5 @@ private fun Long.toDateTimeString(): String {
     }
 }
 
-//@Composable
-//private fun SpaceFooter(createdAt: Long) {
-//    Row(
-//        modifier = Modifier.fillMaxWidth(),
-//        horizontalArrangement = Arrangement.Start
-//    ) {
-//        Text(
-//            text = formatEpochMillis(createdAt),
-//            style = MaterialTheme.typography.bodySmall,
-//            color = MaterialTheme.colorScheme.onSurfaceVariant
-//        )
-//    }
-//}
-
-
-//zoneIdは仮
-//private fun formatEpochMillis(millis: Long, zoneId: ZoneId = ZoneId.of("Asia/Tokyo")): String {
-//    if (millis <= 0L) return "-"
-//    return try {
-//        val instant = Instant.ofEpochMilli(millis)
-//        val local = instant.atZone(zoneId).toLocalDateTime()
-//        local.format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"))
-//    } catch (e: Exception) {
-//        millis.toString()
-//    }
-//}
 
 
