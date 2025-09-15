@@ -1,4 +1,4 @@
-package com.belltree.pomodoroshareapp.Home
+package com.belltree.pomodoroshareapp.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

@@ -10,8 +10,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.belltree.pomodoroshareapp.Home.HomeScreen
-import com.belltree.pomodoroshareapp.Home.HomeViewModel
+import com.belltree.pomodoroshareapp.home.HomeScreen
+import com.belltree.pomodoroshareapp.home.HomeViewModel
 import com.belltree.pomodoroshareapp.Login.AuthScreen
 import com.belltree.pomodoroshareapp.Login.AuthViewModel
 import com.belltree.pomodoroshareapp.MakeSpace.MakeSpaceScreen
@@ -22,6 +22,8 @@ import com.belltree.pomodoroshareapp.Setting.SettingScreen
 import com.belltree.pomodoroshareapp.Setting.SettingViewModel
 import com.belltree.pomodoroshareapp.Space.SpaceScreen
 import com.belltree.pomodoroshareapp.Space.SpaceViewModel
+import com.belltree.pomodoroshareapp.Contact.ContactScreen
+import com.belltree.pomodoroshareapp.Contact.ContactViewModel
 
 // 画面遷移をここで管理する
 @Composable
@@ -50,6 +52,7 @@ fun AppNavHost() {
                     onNavigateMakeSpace = { navController.navigate("make space") },
                     onNavigateRecord = { navController.navigate("record") },
                     onNavigateSpace = { id -> navController.navigate("space/$id") },
+                    onNavigateContact = { navController.navigate("contact") }
             )
         }
 
@@ -102,6 +105,16 @@ fun AppNavHost() {
                         navController.navigate("login") { popUpTo("settings") { inclusive = true } }
                     },
                     onNavigateHome = { navController.navigate("home") }
+            )
+        }
+
+        composable("contact") {
+            val viewModel: ContactViewModel = hiltViewModel()
+            ContactScreen(
+                    contactViewModel = viewModel,
+                    onNavigateHome = { navController.navigate("home") },
+                    onNavigateSettings = { navController.navigate("settings") },
+                    onNavigateSpace = { id -> navController.navigate("space/$id") }
             )
         }
     }

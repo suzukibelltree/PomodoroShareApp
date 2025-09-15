@@ -1,4 +1,4 @@
-package com.belltree.pomodoroshareapp.Home
+package com.belltree.pomodoroshareapp.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 import com.belltree.pomodoroshareapp.domain.models.Space
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.text.font.FontWeight
+import com.belltree.pomodoroshareapp.ui.theme.PomodoroAppColors
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -29,14 +31,17 @@ fun HomeRow(
 ) {
     Card(
         modifier = modifier
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 6.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF333333) // light gray background
+            containerColor = PomodoroAppColors.LightGray // light gray background
         ),
         onClick = {onSpaceClick(space.spaceId)}
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(12.dp)
+        ) {
             SpaceHeader(username = space.ownerName)
             SpaceContent(content = space.spaceName)
             SpaceFooter(createdAt = space.createdAt)
@@ -67,7 +72,11 @@ private fun SpaceContent(content: String) {
     Column {
         Text(
             text = content,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
