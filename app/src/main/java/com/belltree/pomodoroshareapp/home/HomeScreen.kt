@@ -103,7 +103,7 @@ fun HomeScreen(
 		},
 		floatingActionButton = {
 			FloatingActionButton(
-				onClick = { /* Add navigation to create room */ },
+				onClick = { onNavigateMakeSpace() },
 				containerColor = Color(0xFFE76D48),
 				modifier = Modifier.size(56.dp),
 				shape = CircleShape

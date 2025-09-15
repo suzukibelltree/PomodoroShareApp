@@ -120,7 +120,7 @@ fun SpaceScreen(
                 title = space.spaceName,
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
                 onNavigationClick = onNavigateHome,
-                actionIcons = listOf(
+                rightActionIcons = listOf(
                     Icons.Default.ContentCopy to {
                         clipboardManager.setText(AnnotatedString(space.spaceId))
                         Toast.makeText(
