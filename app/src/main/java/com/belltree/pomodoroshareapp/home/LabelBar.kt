@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -24,31 +25,61 @@ fun LabelBar(
     selectedLabel: SpaceState?,
     onSelectedLabelChange: (SpaceState?) -> Unit,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+    LazyRow(
+        modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        FilterChip(
-            selected = selectedLabel == null,
-            onClick = { onSelectedLabelChange(null) },
-            label = { Text("All") }
-        )
-        SpaceState.entries.forEach { state ->
+        item{
             FilterChip(
-                selected = selectedLabel == state,
-                onClick = { onSelectedLabelChange(state) },
-                colors = FilterChipDefaults.filterChipColors(
-                    containerColor = when(state){
-                        SpaceState.WAITING -> PomodoroAppColors.SkyBlue
-                        SpaceState.WORKING -> PomodoroAppColors.CoralOrange
-                        SpaceState.BREAK -> PomodoroAppColors.LimeGreen
-                        SpaceState.FINISHED -> PomodoroAppColors.TurquoiseBlue
-                    }
+                selected = selectedLabel == null,
+                onClick = { onSelectedLabelChange(null) },
+                label = {
+                    Text(
+                        "All",
+                        color = if (selectedLabel == null) Color(0xFF393939) else Color(0xFF48B3D3)
+                    )
+                },
+                border = FilterChipDefaults.filterChipBorder(
+                    enabled = true,
+                    selected = selectedLabel == null,
+                    borderColor = Color(0xFFC4C4C4),
+                    selectedBorderColor = Color(0xFFC4C4C4)
                 ),
-                label = { Text(state.name.lowercase().replaceFirstChar { it.uppercase() }) }
+                enabled = true,
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = Color.Transparent,
+                    selectedContainerColor = Color(0xFFD9D9D9)
+                )
             )
+        }
+        SpaceState.entries.forEach { state ->
+            item{
+                FilterChip(
+                    selected = selectedLabel == state,
+                    onClick = { onSelectedLabelChange(state) },
+                    label = {
+                        Text(
+                            state.name.lowercase().replaceFirstChar { it.uppercase() },
+                            color = when(state){
+                                SpaceState.WAITING -> PomodoroAppColors.SkyBlue
+                                SpaceState.WORKING -> PomodoroAppColors.CoralOrange
+                                SpaceState.BREAK -> PomodoroAppColors.LimeGreen
+                                SpaceState.FINISHED -> PomodoroAppColors.TurquoiseBlue
+                            }
+                        )
+                    },
+                    border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = selectedLabel == state,
+                        borderColor = Color(0xFFC4C4C4),
+                        selectedBorderColor = Color(0xFFC4C4C4)
+                    ),
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = Color.Transparent,
+                        selectedContainerColor = Color(0xFFD9D9D9)
+                    )
+                )
+            }
         }
     }
 }

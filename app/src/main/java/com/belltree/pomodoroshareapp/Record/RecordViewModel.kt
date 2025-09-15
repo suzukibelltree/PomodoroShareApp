@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import javax.inject.Inject
+import jakarta.inject.Inject
 
 @HiltViewModel
 class RecordViewModel @Inject constructor(

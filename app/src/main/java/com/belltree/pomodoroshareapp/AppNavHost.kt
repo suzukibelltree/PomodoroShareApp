@@ -22,8 +22,6 @@ import com.belltree.pomodoroshareapp.Setting.SettingScreen
 import com.belltree.pomodoroshareapp.Setting.SettingViewModel
 import com.belltree.pomodoroshareapp.Space.SpaceScreen
 import com.belltree.pomodoroshareapp.Space.SpaceViewModel
-import com.belltree.pomodoroshareapp.Contact.ContactScreen
-import com.belltree.pomodoroshareapp.Contact.ContactViewModel
 
 // 画面遷移をここで管理する
 @Composable
@@ -52,7 +50,6 @@ fun AppNavHost() {
                     onNavigateMakeSpace = { navController.navigate("make space") },
                     onNavigateRecord = { navController.navigate("record") },
                     onNavigateSpace = { id -> navController.navigate("space/$id") },
-                    onNavigateContact = { navController.navigate("contact") }
             )
         }
 
@@ -108,14 +105,14 @@ fun AppNavHost() {
             )
         }
 
-        composable("contact") {
-            val viewModel: ContactViewModel = hiltViewModel()
-            ContactScreen(
-                    contactViewModel = viewModel,
-                    onNavigateHome = { navController.navigate("home") },
-                    onNavigateSettings = { navController.navigate("settings") },
-                    onNavigateSpace = { id -> navController.navigate("space/$id") }
-            )
-        }
+//        composable("contact") {
+//            val viewModel: ContactViewModel = hiltViewModel()
+//            ContactScreen(
+//                    contactViewModel = viewModel,
+//                    onNavigateHome = { navController.navigate("home") },
+//                    onNavigateSettings = { navController.navigate("settings") },
+//                    onNavigateSpace = { id -> navController.navigate("space/$id") }
+//            )
+//        }
     }
 }

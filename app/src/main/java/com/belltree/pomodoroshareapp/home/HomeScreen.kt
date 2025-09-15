@@ -1,5 +1,6 @@
 package com.belltree.pomodoroshareapp.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,16 +13,23 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Contacts
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.SignalCellularAlt
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -60,127 +68,97 @@ fun HomeScreen(
     onNavigateMakeSpace: () -> Unit = {},
     onNavigateRecord: () -> Unit = {},
 	onNavigateSpace: (String) -> Unit = {},
-    onNavigateContact: () -> Unit = {}
 ) {
 
 	val spaces by homeViewModel.spaces.collectAsState()
+	val ownerName by homeViewModel.ownerName.collectAsState() //利用しているユーザー名を指す
+	val isLoading by homeViewModel.isLoading.collectAsState()
 	var keyword by rememberSaveable { mutableStateOf("") }
 	var selectedLabel: SpaceState? by rememberSaveable { mutableStateOf<SpaceState?>(null) }
 	val filteredSpaces = spaces
 		.filter { space ->
-			keyword.isBlank() || space.spaceName.contains(keyword, ignoreCase = true)
+			keyword.isBlank() || space.spaceName.contains(keyword, ignoreCase = true) //==Query
 		}
 		.filter { space ->
-			selectedLabel == null || space.spaceState == selectedLabel
+			selectedLabel == null || space.spaceState == selectedLabel//==Filter
 		}
-	LaunchedEffect(homeViewModel, spaces.isEmpty()){
-		if(spaces.isEmpty()){
+	LaunchedEffect(homeViewModel, spaces.isEmpty()) {
+		if (spaces.isEmpty()) {
 			homeViewModel.getUnfinishedSpaces()
 		}
 	}
 	Scaffold(
 		topBar = {
 			AppTopBar(
-				title = "Home",
-				actionIcons = listOf(
-					Icons.Filled.Contacts to onNavigateContact,
-					Icons.Filled.History to onNavigateRecord,
-					Icons.Filled.Settings to onNavigateSettings,
+				title = "ルーム一覧",
+				navigationIcon = Icons.Filled.SignalCellularAlt,
+				onNavigationClick = onNavigateRecord,
+//				additionalNavigationIcons = listOf(
+//					Icons.Filled.History to onNavigateRecord,
+//				)
+				rightActionIcons = listOf(
+					Icons.Filled.AccountCircle to onNavigateSettings,
 				)
 			)
+		},
+		floatingActionButton = {
+			FloatingActionButton(
+				onClick = { /* Add navigation to create room */ },
+				containerColor = Color(0xFFE76D48),
+				modifier = Modifier.size(56.dp),
+				shape = CircleShape
+			) {
+				Icon(
+					imageVector = Icons.Filled.Groups,
+					contentDescription = "Create Room",
+					tint = Color(0xFFBEDC53)
+				)
+			}
 		}
-	) { innerPadding: PaddingValues ->
-		Box(
+	) { innerPadding ->
+		Column(
 			modifier = Modifier
 				.fillMaxSize()
 				.padding(innerPadding)
+				.background(Color.White)//指定しないとスマホデフォルトの色と混ざる
 		) {
-			Column(
-				modifier = Modifier
-					.fillMaxSize()
-			) {
-				SearchBar(
-					keyword = keyword,
-					onKeywordChange = { keyword = it }
-				)
-				LabelBar(
-					selectedLabel = selectedLabel,
-					onSelectedLabelChange = { selectedLabel = it }
-				)
+			SearchBar(
+				keyword = keyword,
+				onKeywordChange = { keyword = it },
+				modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+			)
+			GreetingSection(
+				userName = ownerName,
+				modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+			)
+			LabelBar(
+				selectedLabel = selectedLabel,
+				onSelectedLabelChange = { selectedLabel = it },
+				modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+			)
+			if (isLoading) {
+				Box(
+					modifier = Modifier.fillMaxSize(),
+					contentAlignment = Alignment.Center
+				) {
+					CircularProgressIndicator()
+				}
+			} else {
 				LazyColumn(
 					modifier = Modifier.fillMaxSize(),
-					contentPadding = PaddingValues(8.dp),
+					contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+					verticalArrangement = Arrangement.spacedBy(8.dp)
 				) {
 					items(filteredSpaces) { item ->
-						HomeRow(space = item, onSpaceClick = { id -> onNavigateSpace(id) })
+						HomeRow(
+							space = item,
+							onSpaceClick = { id -> onNavigateSpace(id) },
+							modifier = Modifier.fillMaxWidth()
+						)
 					}
 				}
 			}
-			FloatingActionButton(
-				modifier = Modifier
-					.align(Alignment.BottomEnd)
-					.padding(12.dp),
-				onClick = {onNavigateMakeSpace()}
-			)	{ Icon(imageVector = Icons.Filled.People, contentDescription = null) }
-		}
-	}
-
-@Composable
-private fun HomeRow(
-	space: com.belltree.pomodoroshareapp.domain.models.Space,
-	onSpaceClick: (String) -> Unit
-)	{
-	Card(
-		modifier = Modifier
-			.fillMaxWidth()
-			.padding(horizontal = 8.dp, vertical = 6.dp)
-			.clickable { onSpaceClick(space.spaceId) },
-		colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F3F3))
-	)	{
-		Column(modifier = Modifier.padding(12.dp))	{
-			Row(verticalAlignment = Alignment.CenterVertically) {
-				Text(
-					text = space.spaceName.ifBlank { "部屋名" },
-					style = MaterialTheme.typography.titleMedium,
-					fontWeight = FontWeight.SemiBold,
-					modifier = Modifier.weight(1f),
-					maxLines = 1,
-					overflow = TextOverflow.Ellipsis
-				)
-			}
-			Spacer(modifier = androidx.compose.ui.Modifier.height(8.dp))
-			Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-				StatusDot(state = space.spaceState)
-				Text(text = "開始時間：${space.startTime.toDateTimeOrDash()}", style = MaterialTheme.typography.bodySmall)
-			}
-			Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
-			Text(text = "${space.currentSessionCount}/${space.sessionCount} セッション", style = MaterialTheme.typography.bodySmall)
-			Spacer(modifier = androidx.compose.ui.Modifier.height(2.dp))
-			Text(text = "部屋主：${space.ownerName.ifBlank { "ユーザーA" }}", style = MaterialTheme.typography.bodySmall)
-			Spacer(modifier = androidx.compose.ui.Modifier.height(2.dp))
-			Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-				Text(text = "${space.participantsId.size}人参加！", style = MaterialTheme.typography.bodySmall)
-				Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-					Icon(imageVector = Icons.Filled.People, contentDescription = null)
-				}
-			}
 		}
 	}
 }
 
-@Composable
-private fun StatusDot(state: com.belltree.pomodoroshareapp.domain.models.SpaceState) {
-	androidx.compose.foundation.layout.Box(
-		modifier = Modifier
-			.width(8.dp)
-			.height(8.dp)
-	)
-}
-
-private fun Long.toDateTimeOrDash(): String {
-	if (this <= 0L) return "-"
-	return try {
-		val sdf = java.text.SimpleDateFormat("yyyy/M/d H:mm", java.util.Locale.getDefault())
-		sdf.format(java.util.Date(this))
-	} catch (e: Exception) { "-" }
-}
