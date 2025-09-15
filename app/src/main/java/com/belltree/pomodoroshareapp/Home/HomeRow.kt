@@ -12,11 +12,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.belltree.pomodoroshareapp.domain.models.Space
-import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.clickable
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -32,9 +31,9 @@ fun HomeRow(
             .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF333333) // light gray background
+            containerColor = Color.LightGray// light gray background
         ),
-        onClick = {onSpaceClick(space.spaceId)}
+        onClick = { onSpaceClick(space.spaceId) }
     ) {
         Column(Modifier.padding(16.dp)) {
             SpaceHeader(username = space.ownerName)

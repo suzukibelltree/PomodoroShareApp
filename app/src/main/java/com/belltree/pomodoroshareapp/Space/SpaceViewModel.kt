@@ -69,8 +69,8 @@ constructor(
     val remainingTimeMillis: StateFlow<Long> = _remainingTimeMillis
 
     // 開始前のカウントダウン表示用
-    private val _timeUntilStartMillis = MutableStateFlow<Long?>(null)
-    val timeUntilStartMillis: StateFlow<Long?> = _timeUntilStartMillis
+    private val _timeUntilStartMillis = MutableStateFlow<Long>(0L)
+    val timeUntilStartMillis: StateFlow<Long> = _timeUntilStartMillis
 
     private val _currentSessionCount = MutableStateFlow(0)
     val currentSessionCount: StateFlow<Int> = _currentSessionCount
@@ -86,7 +86,7 @@ constructor(
     private var sessionCount = 0
 
     // 作業時間と休憩時間 (ミリ秒)
-    private var workDuration = 1 * 60 * 1000L
+    private var workDuration = 25 * 60 * 1000L
     private var breakDuration = 5 * 60 * 1000L
 
     // スペースの開始時間 (ミリ秒)
@@ -144,6 +144,7 @@ constructor(
     fun setSpace(space: Space) {
         sessionCount = space.sessionCount
         startTime = space.startTime
+        _currentSessionCount.value = space.currentSessionCount
         _remainingTimeMillis.value = workDuration
 
         timerJob?.cancel()
@@ -159,7 +160,7 @@ constructor(
                         _spaceState.value = SpaceState.WAITING
                         _progress.value = 1f
                     } else { // 部屋開始後の処理
-                        _timeUntilStartMillis.value = null
+                        _timeUntilStartMillis.value = 0L
                         val elapsed = (now - startTime).coerceAtLeast(0L)
                         val cycleLength = workDuration + breakDuration
                         val currentCycle = (elapsed / cycleLength).toInt()
@@ -228,7 +229,7 @@ constructor(
         timerJob?.cancel()
         _progress.value = 1f
         _remainingTimeMillis.value = 0L
-        _timeUntilStartMillis.value = null
+        _timeUntilStartMillis.value = 0L
     }
 
     fun addComment(spaceId: String, comment: Comment) {
