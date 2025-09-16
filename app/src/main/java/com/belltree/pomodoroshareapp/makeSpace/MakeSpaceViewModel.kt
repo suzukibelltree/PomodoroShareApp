@@ -1,4 +1,4 @@
-package com.belltree.pomodoroshareapp.MakeSpace
+package com.belltree.pomodoroshareapp.makeSpace
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
