@@ -9,7 +9,9 @@ import com.belltree.pomodoroshareapp.domain.models.Record
 import com.belltree.pomodoroshareapp.domain.repository.CommentRepository
 import com.belltree.pomodoroshareapp.domain.repository.RecordRepository
 import com.google.ai.client.generativeai.GenerativeModel
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,13 +19,14 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import jakarta.inject.Inject
 
 @HiltViewModel
 class RecordViewModel @Inject constructor(
     private val recordRepository: RecordRepository,
-    private val commentRepository: CommentRepository
+    private val commentRepository: CommentRepository,
+    private val auth: FirebaseAuth
 ) : ViewModel() {
+    val userId: String = auth.currentUser?.uid ?: "Unknown"
     private val _records = MutableStateFlow<List<Record>>(emptyList())
     val records: StateFlow<List<Record>> = _records
 

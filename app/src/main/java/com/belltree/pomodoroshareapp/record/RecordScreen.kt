@@ -1,15 +1,34 @@
 package com.belltree.pomodoroshareapp.Record
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
+import com.belltree.pomodoroshareapp.ui.theme.PomodoroAppColors
 
 @Composable
 fun RecordScreen(
@@ -17,23 +36,78 @@ fun RecordScreen(
     recordViewModel: RecordViewModel,
     onNavigateHome: () -> Unit = {}
 ) {
+    var showStatic by remember { mutableStateOf(true) }
+    val records by recordViewModel.records.collectAsState()
+    LaunchedEffect(Unit) {
+        recordViewModel.getAllRecords(recordViewModel.userId)
+    }
     Scaffold(
         topBar = {
             AppTopBar(
-                title = "Record",
+                title = "分析",
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
                 onNavigationClick = onNavigateHome,
             )
-        }
+        },
+        contentWindowInsets = WindowInsets.ime
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            Text(
-                text = "ここにGeminiのレポートを表示する予定です！"
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row {
+                    AnalyticsButton(
+                        text = "統計",
+                        isSelected = showStatic,
+                        color = PomodoroAppColors.CoralOrange,
+                        onClick = { showStatic = true },
+                        modifier = Modifier.width(140.dp)
+                    )
+                    AnalyticsButton(
+                        text = "履歴",
+                        isSelected = !showStatic,
+                        color = PomodoroAppColors.SkyBlue,
+                        onClick = { showStatic = false },
+                        modifier = Modifier.width(140.dp)
+                    )
+                }
+                if (showStatic) {
+                    StaticSection()
+                } else {
+                    RecordSection(
+                        records = records
+                    )
+                }
+            }
         }
+    }
+}
+
+@Composable
+fun AnalyticsButton(
+    text: String,
+    isSelected: Boolean,
+    color: Color,
+    onClick: () -> Unit,
+    modifier: Modifier
+) {
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = color,
+            contentColor = if (isSelected) Color.White else Color.Black
+        ),
+        shape = RoundedCornerShape(
+            if (isSelected) 24.dp else 8.dp
+        ),
+        modifier = modifier
+    ) {
+        Text(text = text)
     }
 }
