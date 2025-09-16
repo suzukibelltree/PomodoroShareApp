@@ -127,7 +127,7 @@ fun HomeScreen(
 				onKeywordChange = { keyword = it },
 				modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
 			)
-			GreetingSection(
+			HomeGreetingSection(
 				userName = ownerName,
 				modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
 			)
