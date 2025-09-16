@@ -103,6 +103,11 @@ dependencies {
     implementation(libs.androidx.lifecycle.extensions)
 
     implementation(libs.androidx.work.runtime.ktx)
+
+    // For Vico
+    implementation(libs.vico.compose)
+    implementation(libs.vico.compose.m2)
+    implementation(libs.vico.compose.m3)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
