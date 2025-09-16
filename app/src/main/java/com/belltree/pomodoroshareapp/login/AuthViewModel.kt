@@ -47,7 +47,11 @@ class AuthViewModel @Inject constructor(
                 _currentUser.value?.let { user ->
                     viewModelScope.launch {
                         userRepository.addUserToFirestore(
-                            User(userId = user.uid, userName = user.displayName ?: "Guest User")
+                            User(
+                                userId = user.uid,
+                                userName = user.displayName ?: "Guest User",
+                                photoUrl = user.photoUrl?.toString() ?: ""
+                            )
                         )
                     }
                 }
@@ -60,14 +64,40 @@ class AuthViewModel @Inject constructor(
     fun onLoginSuccess(user: FirebaseUser?) {
         _currentUser.value = user
         _errorMessage.value = null
+        val storage = supabase.storage.from("pomodoro")
+        val path = "users/${user?.uid}/profile.jpg"
+
+        val exists = try {
+            storage.retrieve(path)
+            true
+        } catch (e: Exception) {
+            false
+        }
+
+        // 初回だけ保存
+        if (!exists) {
+            val imageBytes = downloadImage(photoUrl)
+            storage.upload(
+                path = path,
+                data = imageBytes,
+                upsert = false // 上書きしない
+            )
+        }
+
+        val publicUrl = storage.publicUrl(path)
 
         // Firestore にユーザーを追加
         viewModelScope.launch {
             userRepository.addUserToFirestore(
-                User(userId = user?.uid ?: "", userName = user?.displayName ?: "Guest User")
+                User(
+                    userId = user?.uid ?: "",
+                    userName = user?.displayName ?: "Guest User",
+                    photoUrl = user?.photoUrl?.toString() ?: ""
+                )
             )
         }
     }
+
 
     fun onLoginFailed(message: String) {
         _currentUser.value = null
