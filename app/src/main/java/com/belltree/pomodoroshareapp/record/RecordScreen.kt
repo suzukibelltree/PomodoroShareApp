@@ -1,5 +1,6 @@
 package com.belltree.pomodoroshareapp.Record
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -55,6 +56,7 @@ fun RecordScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .background(Color(0xFFF5F5F5))
         ) {
             Column(
                 modifier = Modifier

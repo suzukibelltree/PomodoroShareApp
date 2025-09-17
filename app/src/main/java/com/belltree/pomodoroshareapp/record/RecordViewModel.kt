@@ -6,7 +6,6 @@ import com.belltree.pomodoroshareapp.BuildConfig
 import com.belltree.pomodoroshareapp.domain.models.Comment
 import com.belltree.pomodoroshareapp.domain.models.DailyStudySummary
 import com.belltree.pomodoroshareapp.domain.models.Record
-import com.belltree.pomodoroshareapp.domain.repository.CommentRepository
 import com.belltree.pomodoroshareapp.domain.repository.RecordRepository
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.firebase.auth.FirebaseAuth
@@ -23,7 +22,6 @@ import java.time.ZoneId
 @HiltViewModel
 class RecordViewModel @Inject constructor(
     private val recordRepository: RecordRepository,
-    private val commentRepository: CommentRepository,
     private val auth: FirebaseAuth
 ) : ViewModel() {
     val userId: String = auth.currentUser?.uid ?: "Unknown"
