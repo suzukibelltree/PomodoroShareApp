@@ -54,14 +54,14 @@ fun AuthScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Google One Tap Client
-    val oneTapClient = remember { Identity.getSignInClient(context) }
+    val oneTapClient = remember { Identity.getSignInClient(context) }//ワンタップログインのオブジェクト
     val signInRequest = remember {
         BeginSignInRequest.Builder()
             .setGoogleIdTokenRequestOptions(
                 BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
-                    .setSupported(true)
+                    .setSupported(true)//IDトークンを使うログイン
                     // Firebaseコンソール -> 認証 -> サインイン方法 -> Google -> WebクライアントID を指定
-                    .setServerClientId(BuildConfig.WEB_CLIENT_ID)
+                    .setServerClientId(BuildConfig.WEB_CLIENT_ID)//firebaseプロジェクトであることを示す
                     .setFilterByAuthorizedAccounts(false)
                     .build()
             )
@@ -70,14 +70,16 @@ fun AuthScreen(
 
     var launching by remember { mutableStateOf(false) }
 
+
+    //ログイン結果を受け取る仕組み
     val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartIntentSenderForResult()
+        contract = ActivityResultContracts.StartIntentSenderForResult()//別画面から結果を受け取る
     ) { result ->
         launching = false
         if (result.resultCode == Activity.RESULT_OK) {
             try {
-                val credential = oneTapClient.getSignInCredentialFromIntent(result.data)
-                val idToken = credential.googleIdToken
+                val credential = oneTapClient.getSignInCredentialFromIntent(result.data)//サインイン結果を取り出す
+                val idToken = credential.googleIdToken//Googleトークンの取得
                 if (idToken != null) {
                     viewModel.signInWithGoogle(idToken)
                 } else {
@@ -158,6 +160,7 @@ fun AuthScreen(
                 Text("初回登録が完了しました", style = MaterialTheme.typography.bodyMedium)
             }
         }
+
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)

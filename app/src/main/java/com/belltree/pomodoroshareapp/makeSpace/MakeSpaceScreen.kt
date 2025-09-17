@@ -59,6 +59,7 @@ fun MakeSpaceScreen(
     val timeState = rememberTimePickerState(is24Hour = true) //時計のホップアップと紐づいてる
     var showDialog by remember { mutableStateOf(false) }
     var user by remember { mutableStateOf<User?>(null) }
+    var sessionCountInput by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         user = makeSpaceViewModel.getCurrentUserById()
@@ -126,6 +127,21 @@ fun MakeSpaceScreen(
                 )
             }
 
+            OutlinedTextField(
+                value = sessionCountInput,
+                onValueChange = { newValue ->
+                    // 数字のみ、または空文字列を許可 (最大長も設定可能)
+                    if (newValue.all { it.isDigit() } && newValue.length <= 2) {
+                        sessionCountInput = newValue
+                    }
+                },
+                label = { Text("セッション数 (例: 4)") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -161,7 +177,7 @@ fun MakeSpaceScreen(
                             ownerId = user?.userId ?: "01",
                             ownerName = user?.userName ?: "ゲスト", //firebaseのdisplayName要デバック
                             startTime = startTime,
-                            sessionCount = 4,
+                            sessionCount = sessionCountInput.toInt(),
                             participantsId = emptyList(),
                             createdAt = System.currentTimeMillis(),
                             lastUpdated = System.currentTimeMillis(),
