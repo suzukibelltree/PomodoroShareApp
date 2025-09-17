@@ -17,8 +17,8 @@ class AuthRepositoryImpl @Inject constructor(
         idToken: String,
         onResult: (success: Boolean, isNewUser: Boolean, error: String?) -> Unit
     ) {
-        val credential = GoogleAuthProvider.getCredential(idToken, null)
-        firebaseAuth.signInWithCredential(credential)
+        val credential = GoogleAuthProvider.getCredential(idToken, null)//Firebase 用の認証資格情報を取得
+        firebaseAuth.signInWithCredential(credential)//firebaseAuthenticationにサインイン
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val isNew = task.result?.additionalUserInfo?.isNewUser == true

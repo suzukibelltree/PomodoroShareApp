@@ -30,6 +30,10 @@ android {
         }
         val apiKey: String = localProps.getProperty("API_KEY", "")
         buildConfigField("String", "API_KEY", "\"$apiKey\"")
+        val supabaseUrl: String = localProps.getProperty("SUPABASE_URL", "")
+        val supabaseAnonKey: String = localProps.getProperty("SUPABASE_ANON_KEY", "")
+        buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
         buildConfigField(
             "String",
             "WEB_CLIENT_ID",
@@ -101,6 +105,12 @@ dependencies {
 
     // For Lifecycle
     implementation(libs.androidx.lifecycle.extensions)
+
+    // Supabase SDK
+    implementation(platform(libs.supabase.bom))
+    implementation(libs.supabase.postgrest)
+    implementation(libs.supabase.storage)
+    implementation(libs.ktor.client.android)
 
     implementation(libs.androidx.work.runtime.ktx)
 
