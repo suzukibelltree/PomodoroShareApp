@@ -34,8 +34,6 @@ class AuthViewModel @Inject constructor(
     private val supabaseClient: SupabaseClient
 ) : ViewModel(
 ) {
-    // DI 未導入のため内部生成（将来 Hilt へ移行予定）
-    // 現在ログインしているユーザー
     private val _currentUser = mutableStateOf<FirebaseUser?>(authRepository.getCurrentUser())
     val currentUser: State<FirebaseUser?> = _currentUser
 
@@ -82,12 +80,14 @@ class AuthViewModel @Inject constructor(
             val googleUrl = getGooglePhotoUrl(user)?.let { normalizeGooglePhotoUrl(it) }
             val urlToSave: String = if (!googleUrl.isNullOrBlank()) {
                 val publicUrlFromEdge = callUploadProfileEdgeFunction(
+                    //edge functionURL
                     endpoint = "https://jaemimxpboicrxbpaycq.functions.supabase.co/upload-profile",
                     userId = user?.uid ?: "",
+                    //google画像のURL
                     sourceImageUrl = googleUrl
                 )
                 val finalUrl = (publicUrlFromEdge ?: googleUrl).trim()
-                // Cache bust to avoid CDN stale content
+                // ログインのたびにユニークなURLを生成
                 "$finalUrl?v=${System.currentTimeMillis()}"
             } else {
                 (user?.photoUrl?.toString() ?: "").trim()
@@ -138,7 +138,7 @@ private fun getGooglePhotoUrl(user: FirebaseUser?): String? {
     val googleProvider = user.providerData.firstOrNull { it.providerId == "google.com" }
     return googleProvider?.photoUrl?.toString() ?: user.photoUrl?.toString()
 }
-
+//画像の256×256にを指定する関数、googleプロフィール画像は一定のため必要ないかもしれない
 private fun normalizeGooglePhotoUrl(original: String): String {
     return try {
         val uri = java.net.URI(original)
@@ -170,9 +170,11 @@ private suspend fun callUploadProfileEdgeFunction(
     sourceImageUrl: String
 ): String? = withContext(Dispatchers.IO) {
     // Get Firebase ID token
+    //デバックのためログにトークンを表示
     val token = Firebase.auth.currentUser?.getIdToken(false)?.addOnSuccessListener { Log.d("ID_TOKEN", it.token ?: "") } ?.addOnFailureListener { Log.e("ID_TOKEN", "failed", it) }
         ?.await()?.token ?: return@withContext null
 
+    //edge functionにリクエストを送る
     val jsonBody = """{"userId":"$userId","imageUrl":"$sourceImageUrl"}"""
     val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
     val body = okhttp3.RequestBody.create(mediaType, jsonBody)
@@ -184,12 +186,14 @@ private suspend fun callUploadProfileEdgeFunction(
         .build()
 
     val client = okhttp3.OkHttpClient()
+    //edge functionにhttpリクエストを送信
     val response = client.newCall(request).execute()
     response.use { resp ->
         if (!resp.isSuccessful) return@withContext null
         val responseStr = resp.body?.string() ?: return@withContext null
         // parse JSON safely
         try {
+            //jsonをstringに変換,publicUrlで包括
             val obj = org.json.JSONObject(responseStr)
             obj.optString("publicUrl", null)
         } catch (e: Exception) {
