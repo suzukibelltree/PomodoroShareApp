@@ -160,6 +160,7 @@ fun AuthScreen(
                 Text("初回登録が完了しました", style = MaterialTheme.typography.bodyMedium)
             }
         }
+
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
