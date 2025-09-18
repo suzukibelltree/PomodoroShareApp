@@ -48,4 +48,21 @@ class RecordRepositoryImpl @Inject constructor(val db: FirebaseFirestore) : Reco
             )
             .await()
     }
+
+    // 指定した期間内のレコードを取得(RecordViewModelで使用する)
+    override suspend fun getRecordsForRange(
+        userId: String,
+        startMillis: Long,
+        endMillis: Long
+    ): List<Record> {
+        val snapshot = db.collection("records")
+            .whereEqualTo("userId", userId)
+            .whereGreaterThanOrEqualTo("startTime", startMillis)
+            .whereLessThan("startTime", endMillis)
+            .get()
+            .await()
+
+        return snapshot.documents.mapNotNull { it.toObject(Record::class.java) }
+    }
+
 }

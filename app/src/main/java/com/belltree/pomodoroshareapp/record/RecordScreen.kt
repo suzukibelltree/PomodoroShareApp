@@ -30,6 +30,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 import com.belltree.pomodoroshareapp.ui.theme.PomodoroAppColors
+import java.time.Instant
+import java.time.ZoneId
 
 @Composable
 fun RecordScreen(
@@ -39,8 +41,15 @@ fun RecordScreen(
 ) {
     var showStatic by remember { mutableStateOf(true) }
     val records by recordViewModel.records.collectAsState()
+    val weeklySummary by recordViewModel.weeklySummaryForGraph.collectAsState()
+    val weekOffset = recordViewModel.currentWeeklyOffset.collectAsState()
+    val (startOfWeek, endOfWeek) = recordViewModel.getWeekRangeByOffset(weekOffset.value)
+    val zone = ZoneId.of("Asia/Tokyo")
+    val startOfWeekDate = Instant.ofEpochMilli(startOfWeek).atZone(zone).toLocalDate()
+    val endOfWeekDate = Instant.ofEpochMilli(endOfWeek).atZone(zone).toLocalDate()
     LaunchedEffect(Unit) {
         recordViewModel.getAllRecords(recordViewModel.userId)
+        recordViewModel.getOneWeekRecords()
     }
     Scaffold(
         topBar = {
@@ -56,7 +65,7 @@ fun RecordScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color(0xFFF5F5F5))
+                .background(Color.White)
         ) {
             Column(
                 modifier = Modifier
@@ -80,7 +89,14 @@ fun RecordScreen(
                     )
                 }
                 if (showStatic) {
-                    StaticSection()
+                    StaticSection(
+                        weeklySummary = weeklySummary,
+                        onProgressButtonClick = { recordViewModel.moveToNextWeek() },
+                        onBackButtonClick = { recordViewModel.moveToPreviousWeek() },
+                        weekOffset = weekOffset.value,
+                        startOfWeek = startOfWeekDate,
+                        endOfWeek = endOfWeekDate
+                    )
                 } else {
                     RecordSection(
                         records = records
