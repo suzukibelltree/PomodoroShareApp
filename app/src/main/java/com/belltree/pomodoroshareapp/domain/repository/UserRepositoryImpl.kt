@@ -18,6 +18,14 @@ class UserRepositoryImpl @Inject constructor(
             throw e
         }
     }
+    override suspend fun updateUserToFirestore(user: User) {
+        try {
+            db.collection("users").document(user.userId).set(user).await()
+        } catch (e: Exception) {
+            Log.e("UserRepository", "Failed to update user", e)
+            throw e
+        }
+    }
 
     override suspend fun getUserById(userId: String): User? {
         return try {

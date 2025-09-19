@@ -72,6 +72,7 @@ fun HomeScreen(
 
 	val spaces by homeViewModel.spaces.collectAsState()
 	val ownerName by homeViewModel.ownerName.collectAsState() //利用しているユーザー名を指す
+	val ownerPhotoUrl by homeViewModel.ownerPhotoUrl.collectAsState()
 	val isLoading by homeViewModel.isLoading.collectAsState()
 	var keyword by rememberSaveable { mutableStateOf("") }
 	var selectedLabel: SpaceState? by rememberSaveable { mutableStateOf<SpaceState?>(null) }
@@ -86,19 +87,21 @@ fun HomeScreen(
 		if (spaces.isEmpty()) {
 			homeViewModel.getUnfinishedSpaces()
 		}
+		homeViewModel.loadOwner()
 	}
 	Scaffold(
-		topBar = {
+			topBar = {
 			AppTopBar(
 				title = "ルーム一覧",
-				navigationIcon = Icons.Filled.SignalCellularAlt,
+				avatarUrl = ownerPhotoUrl.takeIf { it.isNotBlank() },
 				onNavigationClick = onNavigateRecord,
 //				additionalNavigationIcons = listOf(
 //					Icons.Filled.History to onNavigateRecord,
 //				)
-				rightActionIcons = listOf(
-					Icons.Filled.AccountCircle to onNavigateSettings,
-				)
+//				rightActionIcons = listOf(
+//					Icons.Filled.AccountCircle to onNavigateSettings,
+//				),
+				onAvatarClick = onNavigateSettings
 			)
 		},
 		floatingActionButton = {
