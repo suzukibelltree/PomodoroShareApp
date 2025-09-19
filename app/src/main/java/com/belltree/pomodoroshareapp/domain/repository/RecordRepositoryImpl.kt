@@ -65,4 +65,19 @@ class RecordRepositoryImpl @Inject constructor(val db: FirebaseFirestore) : Reco
         return snapshot.documents.mapNotNull { it.toObject(Record::class.java) }
     }
 
+    override suspend fun getRecordsForMonth(
+        userId: String,
+        startMillis: Long,
+        todayEnd: Long
+    ): List<Record> {
+        val snapshot = db.collection("records")
+            .whereEqualTo("userId", userId)
+            .whereGreaterThanOrEqualTo("endTime", startMillis)
+            .whereLessThan("endTime", todayEnd)
+            .get()
+            .await()
+
+        return snapshot.documents.mapNotNull { it.toObject(Record::class.java) }
+    }
+
 }

@@ -21,8 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,22 +39,31 @@ import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.common.fill
+import com.patrykandpatrick.vico.compose.common.shader.verticalGradient
 import com.patrykandpatrick.vico.core.cartesian.axis.BaseAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModel
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.data.ColumnCartesianLayerModel
-import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
+import com.patrykandpatrick.vico.core.cartesian.data.LineCartesianLayerModel
+import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
+import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
 import java.time.LocalDate
+import java.time.YearMonth
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+import kotlin.math.roundToInt
 
 @Composable
 fun StaticSection(
     weeklySummary: List<DailyStudySummary>,
+    monthlySummary: List<DailyStudySummary>,
     onProgressButtonClick: () -> Unit = {},
     onBackButtonClick: () -> Unit = {},
     weekOffset: Int = 0,
@@ -75,7 +82,10 @@ fun StaticSection(
             startOfWeek = startOfWeek,
             endOfWeek = endOfWeek,
         )
-        AccumulatedWorkDurationGraph()
+        MonthlyCumulativeWorkDurationGraph(
+            summary = monthlySummary,
+            month = YearMonth.now(),
+        )
     }
 }
 
@@ -180,7 +190,7 @@ fun DailyWorkDurationGraph(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.White
             ),
@@ -237,39 +247,100 @@ fun DailyWorkDurationGraph(
 }
 
 @Composable
-fun AccumulatedWorkDurationGraph() {
+fun MonthlyCumulativeWorkDurationGraph(
+    summary: List<DailyStudySummary>,
+    month: YearMonth = YearMonth.now(),
+) {
+    val zone = ZoneId.of("Asia/Tokyo")
+    val today = LocalDate.now(zone)
+    val startOfMonth = month.atDay(1)
+    val monthEnd = month.atEndOfMonth()
+
+    // summary が空でなければ summary に含まれる最終日を使い、
+    // そうでなければ today と月末のうち早い方を endDate にする
+    val summaryLastDate: LocalDate? = summary.maxByOrNull { it.date }?.date
+    val endDate: LocalDate = when {
+        summaryLastDate != null -> minOf(summaryLastDate, today, monthEnd)
+        else -> minOf(today, monthEnd)
+    }
+
+    // 日数（startOfMonth 〜 endDate）を計算
+    val days = ChronoUnit.DAYS.between(startOfMonth, endDate).toInt() + 1
+    val allDates = (0 until days).map { startOfMonth.plusDays(it.toLong()) }
+
+    // ラベルとデータ（時間単位）
+    val (dateLabels, data) = if (summary.isEmpty()) {
+        val labels = allDates.map { it.format(DateTimeFormatter.ofPattern("MM/dd")) }
+        labels to List(days) { 0f }
+    } else {
+        val summaryMap = summary.associateBy { it.date }
+        val dailyHours = allDates.map { date ->
+            (summaryMap[date]?.totalMinutes?.toFloat() ?: 0f) / 60f
+        }
+        // 累積値
+        val cumulative = dailyHours.runningFold(0f) { acc, v -> acc + v }.drop(1)
+        val labels = allDates.map { it.format(DateTimeFormatter.ofPattern("MM/dd")) }
+        labels to cumulative
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        val modelProducer = remember { CartesianChartModelProducer() }
-        LaunchedEffect(Unit) {
-            modelProducer.runTransaction {
-                lineSeries { series(13, 8, 7, 12, 0, 1, 15, 14, 0, 11, 6, 12) }
-            }
-        }
-        Column {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text(
-                text = "累積時間",
+                text = "${month.monthValue}月 累計作業時間",
                 modifier = Modifier.padding(8.dp),
                 fontWeight = FontWeight.ExtraBold
             )
+            // Chart
+            val lineColor = Color(0xFF7b68ee)
             CartesianChartHost(
-                chart =
-                    rememberCartesianChart(
-                        rememberLineCartesianLayer(),
-                        startAxis = VerticalAxis.rememberStart(),
-                        bottomAxis = HorizontalAxis.rememberBottom(),
+                chart = rememberCartesianChart(
+                    rememberLineCartesianLayer(
+                        lineProvider =
+                            LineCartesianLayer.LineProvider.series(
+                                LineCartesianLayer.rememberLine(
+                                    fill = LineCartesianLayer.LineFill.single(fill(lineColor)),
+                                    areaFill =
+                                        LineCartesianLayer.AreaFill.single(
+                                            fill(
+                                                ShaderProvider.verticalGradient(
+                                                    arrayOf(
+                                                        lineColor.copy(alpha = 0.4f),
+                                                        Color.Transparent
+                                                    )
+                                                )
+                                            )
+                                        )
+                                )
+                            )
                     ),
-                modelProducer = modelProducer,
-                modifier = Modifier.padding(8.dp)
+                    startAxis = VerticalAxis.rememberStart(),
+                    bottomAxis = HorizontalAxis.rememberBottom(
+                        valueFormatter = { _, value, _ ->
+                            val i = value.roundToInt().coerceIn(0, dateLabels.size - 1)
+                            dateLabels[i]
+                        },
+                    ),
+                ),
+                model = CartesianChartModel(
+                    LineCartesianLayerModel.build {
+                        series(data)
+                    }
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .padding(8.dp)
             )
         }
     }
 }
+

@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.YearMonth
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.Calendar
@@ -39,6 +41,10 @@ class RecordViewModel @Inject constructor(
     // 0 = 今週, -1 = 先週のように扱う
     private val _currentWeeklyOffset = MutableStateFlow(0)
     val currentWeeklyOffset: StateFlow<Int> = _currentWeeklyOffset
+
+    private val _monthlySummaryForGraph = MutableStateFlow<List<DailyStudySummary>>(emptyList())
+    val monthlySummaryForGraph: StateFlow<List<DailyStudySummary>> = _monthlySummaryForGraph
+
     private val _comments = MutableStateFlow<List<Comment>>(emptyList())
     val comments: StateFlow<List<Comment>> = _comments
 
@@ -194,4 +200,42 @@ class RecordViewModel @Inject constructor(
 
         return startOfWeek to endOfWeek
     }
+
+
+    fun loadMonthlySummary(yearMonth: YearMonth) {
+        viewModelScope.launch {
+            val zone = ZoneId.of("Asia/Tokyo")
+            val startOfMonth = yearMonth.atDay(1).atStartOfDay(zone).toInstant().toEpochMilli()
+            val todayEnd = LocalDateTime.now().atZone(zone).toInstant().toEpochMilli()
+
+            val result = recordRepository.getRecordsForMonth(userId, startOfMonth, todayEnd)
+            val summary = generateMonthlySummary(result, yearMonth)
+
+            _monthlySummaryForGraph.value = summary
+        }
+    }
+
+    fun generateMonthlySummary(records: List<Record>, month: YearMonth): List<DailyStudySummary> {
+        val zone = ZoneId.of("Asia/Tokyo")
+        val startOfMonth = month.atDay(1)
+        val today = LocalDate.now(zone)
+        // その月の最終日か、今日のどちらか早い方を「集計の終了日」にする
+        val endDate = minOf(month.atEndOfMonth(), today)
+
+        val filtered = records.filter { record ->
+            val date = Instant.ofEpochMilli(record.endTime).atZone(zone).toLocalDate()
+            !date.isBefore(startOfMonth) && !date.isAfter(endDate)
+        }
+
+        val totalsByDate: Map<LocalDate, Int> = filtered.groupBy { record ->
+            Instant.ofEpochMilli(record.endTime).atZone(zone).toLocalDate()
+        }.mapValues { entry -> entry.value.sumOf { it.durationMinutes } }
+
+        return (1..endDate.dayOfMonth).map { day ->
+            val date = month.atDay(day)
+            DailyStudySummary(date, totalsByDate[date] ?: 0)
+        }
+    }
+
+
 }

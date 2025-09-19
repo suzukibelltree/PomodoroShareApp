@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 import com.belltree.pomodoroshareapp.ui.theme.PomodoroAppColors
 import java.time.Instant
+import java.time.YearMonth
 import java.time.ZoneId
 
 @Composable
@@ -47,9 +48,11 @@ fun RecordScreen(
     val zone = ZoneId.of("Asia/Tokyo")
     val startOfWeekDate = Instant.ofEpochMilli(startOfWeek).atZone(zone).toLocalDate()
     val endOfWeekDate = Instant.ofEpochMilli(endOfWeek).atZone(zone).toLocalDate()
+    val monthlySummary by recordViewModel.monthlySummaryForGraph.collectAsState()
     LaunchedEffect(Unit) {
         recordViewModel.getAllRecords(recordViewModel.userId)
         recordViewModel.getOneWeekRecords()
+        recordViewModel.loadMonthlySummary(YearMonth.now())
     }
     Scaffold(
         topBar = {
@@ -95,7 +98,8 @@ fun RecordScreen(
                         onBackButtonClick = { recordViewModel.moveToPreviousWeek() },
                         weekOffset = weekOffset.value,
                         startOfWeek = startOfWeekDate,
-                        endOfWeek = endOfWeekDate
+                        endOfWeek = endOfWeekDate,
+                        monthlySummary = monthlySummary
                     )
                 } else {
                     RecordSection(
