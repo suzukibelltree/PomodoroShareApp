@@ -90,16 +90,21 @@ fun HomeScreen(
 		homeViewModel.loadOwner()
 	}
 	Scaffold(
-			topBar = {
+		topBar = {
 			AppTopBar(
 				title = "ルーム一覧",
+				searchBar = {
+					SearchBar(
+						keyword = keyword,
+						onKeywordChange = { keyword = it },
+				)},
 				avatarUrl = ownerPhotoUrl.takeIf { it.isNotBlank() },
 				onNavigationClick = onNavigateRecord,
-//				additionalNavigationIcons = listOf(
-//					Icons.Filled.History to onNavigateRecord,
-//				)
+				additionalNavigationIcons = listOf(
+					Icons.Filled.SignalCellularAlt to onNavigateRecord,
+				),
 //				rightActionIcons = listOf(
-//					Icons.Filled.AccountCircle to onNavigateSettings,
+//					Icons.Filled.History to onNavigateRecord,
 //				),
 				onAvatarClick = onNavigateSettings
 			)
@@ -125,15 +130,6 @@ fun HomeScreen(
 				.padding(innerPadding)
 				.background(Color.White)//指定しないとスマホデフォルトの色と混ざる
 		) {
-			SearchBar(
-				keyword = keyword,
-				onKeywordChange = { keyword = it },
-				modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-			)
-			HomeGreetingSection(
-				userName = ownerName,
-				modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-			)
 			LabelBar(
 				selectedLabel = selectedLabel,
 				onSelectedLabelChange = { selectedLabel = it },
@@ -152,6 +148,12 @@ fun HomeScreen(
 					contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
 					verticalArrangement = Arrangement.spacedBy(8.dp)
 				) {
+					item() {
+						HomeGreetingSection(
+							userName = ownerName,
+							modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+						)
+					}
 					items(filteredSpaces) { item ->
 						HomeRow(
 							space = item,
