@@ -152,17 +152,20 @@ fun SpaceScreen(
                     text = "開始時刻\n $startLabel",
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .height(48.dp),
                     textAlign = TextAlign.Center
                 )
             } else if (spaceState == SpaceState.WAITING) { // 開始1時間前以内の場合はカウントダウン表示
                 Text(
                     text = "開始まであと\n%02d分%02d秒".format(minutes, seconds),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
                     textAlign = TextAlign.Center
                 )
             } else {
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(48.dp))
             }
 
             Box(
@@ -223,7 +226,7 @@ fun SpaceScreen(
     }
     if (showDialog) {
         ConfirmDialog(
-            ondismiss = { showDialog = false },
+            onDismiss = { showDialog = false },
             onConfirm = {
                 showDialog = false
                 onNavigateHome()
