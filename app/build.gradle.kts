@@ -127,4 +127,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("com.squareup.okhttp3:okhttp:5.1.0")
     implementation("com.google.code.gson:gson:2.13.1")
+    // Coil for Compose (image loading)
+    implementation("io.coil-kt:coil-compose:2.6.0")
 }

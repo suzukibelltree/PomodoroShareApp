@@ -1,15 +1,19 @@
 package com.belltree.pomodoroshareapp.login
 
 import android.util.Log
+import android.net.Uri
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import com.belltree.pomodoroshareapp.domain.models.User
 import com.belltree.pomodoroshareapp.domain.repository.AuthRepository
 import com.belltree.pomodoroshareapp.domain.repository.UserRepository
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.auth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -20,6 +24,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.SupervisorJob
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 
 
@@ -34,6 +41,8 @@ class AuthViewModel @Inject constructor(
     private val supabaseClient: SupabaseClient
 ) : ViewModel(
 ) {
+    // 長時間のネットワーク処理を UI スコープから分離
+    private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val _currentUser = mutableStateOf<FirebaseUser?>(authRepository.getCurrentUser())
     val currentUser: State<FirebaseUser?> = _currentUser
 
@@ -54,14 +63,23 @@ class AuthViewModel @Inject constructor(
             if (success) {
                 _currentUser.value = authRepository.getCurrentUser()
                 _currentUser.value?.let { user ->
-                    viewModelScope.launch {
-                        userRepository.addUserToFirestore(
-                            User(
-                                userId = user.uid,
-                                userName = user.displayName ?: "Guest User",
-                                photoUrl = user.photoUrl?.toString() ?: ""
+                    ioScope.launch {
+                        try {
+                            Log.d("AuthViewModel", "Adding anonymous user to Firestore: ${user.uid}")
+                            userRepository.addUserToFirestore(
+                                User(
+                                    userId = user.uid,
+                                    userName = user.displayName ?: "Guest User",
+                                    photoUrl = user.photoUrl?.toString() ?: ""
+                                )
                             )
-                        )
+                            Log.d("AuthViewModel", "Added user to Firestore successfully: ${user.uid}")
+                        } catch (e: Exception) {
+                            Log.e("AuthViewModel", "Failed to add anonymous user to Firestore", e)
+                            withContext(Dispatchers.Main) {
+                                _errorMessage.value = "ユーザー保存に失敗しました: ${e.message}"
+                            }
+                        }
                     }
                 }
             } else {
@@ -76,33 +94,81 @@ class AuthViewModel @Inject constructor(
         val bucket = "pomodoro"
         val path = "users/${user?.uid}/profile.jpg"
 
-        viewModelScope.launch {
+        viewModelScope.launch(SupervisorJob() + Dispatchers.IO) {
+            if (user == null) {
+                withContext(Dispatchers.Main) {
+                    _errorMessage.value = "ログインユーザー情報の取得に失敗しました"
+                }
+                return@launch
+            }
+            Log.i("AuthViewModel", "onLoginSuccess uid=${user.uid}")
             val googleUrl = getGooglePhotoUrl(user)?.let { normalizeGooglePhotoUrl(it) }
             val urlToSave: String = if (!googleUrl.isNullOrBlank()) {
-                val publicUrlFromEdge = callUploadProfileEdgeFunction(
-                    //edge functionURL
-                    endpoint = "https://jaemimxpboicrxbpaycq.functions.supabase.co/upload-profile",
-                    userId = user?.uid ?: "",
-                    //google画像のURL
-                    sourceImageUrl = googleUrl
-                )
+                Log.i("AuthViewModel", "Calling edge function for profile upload uid=${user.uid}")
+                val publicUrlFromEdge = try {
+                    withTimeout(5000) {
+                        callUploadProfileEdgeFunction(
+                            //edge functionURL
+                            endpoint = "https://jaemimxpboicrxbpaycq.functions.supabase.co/upload-profile",
+                            userId = user.uid,
+                            //google画像のURL
+                            sourceImageUrl = googleUrl
+                        )
+                    }
+                } catch (e: TimeoutCancellationException) {
+                    Log.w("AuthViewModel", "Edge function timeout", e)
+                    null
+                } catch (e: Exception) {
+                    Log.w("AuthViewModel", "Edge function failed", e)
+                    null
+                }
                 val finalUrl = (publicUrlFromEdge ?: googleUrl).trim()
+                Log.i("AuthViewModel", "Resolved profile image URL length=${finalUrl.length}")
                 // ログインのたびにユニークなURLを生成
                 "$finalUrl?v=${System.currentTimeMillis()}"
             } else {
-                (user?.photoUrl?.toString() ?: "").trim()
+                (user.photoUrl?.toString() ?: "").trim()
             }
 
-            userRepository.addUserToFirestore(
-                User(
-                    userId = user?.uid ?: "",
-                    userName = user?.displayName ?: "Guest User",
-                    photoUrl = urlToSave
+            // Firebase Authentication のユーザープロフィールにも反映（photoUrl を設定）
+            try {
+                val photo = urlToSave.takeIf { it.isNotBlank() }
+                if (photo != null && user != null) {
+                    val request = UserProfileChangeRequest.Builder()
+                        .setPhotoUri(Uri.parse(photo))
+                        .build()
+                    user.updateProfile(request).await()
+                    // ローカルの FirebaseUser を更新
+                    Firebase.auth.currentUser?.reload()?.await()
+                    Log.i("AuthViewModel", "FirebaseAuth photoUrl updated for uid=${user.uid}")
+                }
+            } catch (e: Exception) {
+                Log.w("AuthViewModel", "Failed to update FirebaseAuth photoUrl", e)
+            }
+
+            try {
+                Log.i("AuthViewModel", "Adding user to Firestore: ${user.uid}")
+                userRepository.addUserToFirestore(
+                    User(
+                        userId = user.uid,
+                        userName = user.displayName ?: "Guest User",
+                        photoUrl = urlToSave
+                    )
                 )
-            )
+                Log.i("AuthViewModel", "Added user to Firestore successfully: ${user.uid}")
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Failed to add user to Firestore", e)
+                withContext(Dispatchers.Main) {
+                    _errorMessage.value = "ユーザー保存に失敗しました: ${e.message}"
+                }
+            }
         }
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        ioScope.cancel()
+    }
 
     fun onLoginFailed(message: String) {
         _currentUser.value = null
@@ -122,7 +188,6 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
-
 
     // サインアウトを行う関数
     fun signOut() {
@@ -154,24 +219,14 @@ private fun normalizeGooglePhotoUrl(original: String): String {
     }
 }
 
-private suspend fun downloadImage(url: String): ByteArray = withContext(Dispatchers.IO) {
-    val request = okhttp3.Request.Builder().url(url).build()
-    val client = okhttp3.OkHttpClient()
-    val response = client.newCall(request).execute()
-    response.use { resp ->
-        if (!resp.isSuccessful) throw IllegalStateException("Failed to download: ${resp.code}")
-        resp.body?.bytes() ?: ByteArray(0)
-    }
-}
-
 private suspend fun callUploadProfileEdgeFunction(
     endpoint: String,
     userId: String,
     sourceImageUrl: String
 ): String? = withContext(Dispatchers.IO) {
     // Get Firebase ID token
-    //デバックのためログにトークンを表示
-    val token = Firebase.auth.currentUser?.getIdToken(false)?.addOnSuccessListener { Log.d("ID_TOKEN", it.token ?: "") } ?.addOnFailureListener { Log.e("ID_TOKEN", "failed", it) }
+    val token = Firebase.auth.currentUser?.getIdToken(false)
+        ?.addOnFailureListener { Log.e("ID_TOKEN", "failed", it) }
         ?.await()?.token ?: return@withContext null
 
     //edge functionにリクエストを送る
@@ -185,11 +240,18 @@ private suspend fun callUploadProfileEdgeFunction(
         .addHeader("Content-Type", "application/json")
         .build()
 
-    val client = okhttp3.OkHttpClient()
+    val client = okhttp3.OkHttpClient.Builder()
+        .connectTimeout(java.time.Duration.ofSeconds(3))
+        .readTimeout(java.time.Duration.ofSeconds(4))
+        .writeTimeout(java.time.Duration.ofSeconds(4))
+        .build()
     //edge functionにhttpリクエストを送信
     val response = client.newCall(request).execute()
     response.use { resp ->
-        if (!resp.isSuccessful) return@withContext null
+        if (!resp.isSuccessful) {
+            Log.w("AuthViewModel", "Edge function http ${'$'}{resp.code}")
+            return@withContext null
+        }
         val responseStr = resp.body?.string() ?: return@withContext null
         // parse JSON safely
         try {
@@ -197,6 +259,7 @@ private suspend fun callUploadProfileEdgeFunction(
             val obj = org.json.JSONObject(responseStr)
             obj.optString("publicUrl", null)
         } catch (e: Exception) {
+            Log.w("AuthViewModel", "Edge function parse error", e)
             null
         }
     }

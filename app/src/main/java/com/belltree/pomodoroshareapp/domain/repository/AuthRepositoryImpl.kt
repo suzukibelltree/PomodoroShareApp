@@ -4,6 +4,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import jakarta.inject.Inject
+import android.util.Log
 
 class AuthRepositoryImpl @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
@@ -22,8 +23,11 @@ class AuthRepositoryImpl @Inject constructor(
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val isNew = task.result?.additionalUserInfo?.isNewUser == true
+                    val uid = firebaseAuth.currentUser?.uid
+                    Log.i("AuthRepository", "signInWithGoogle success uid=${uid} isNew=${isNew}")
                     onResult(true, isNew, null)
                 } else {
+                    Log.e("AuthRepository", "signInWithGoogle failed", task.exception)
                     onResult(false, false, task.exception?.message)
                 }
             }

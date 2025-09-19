@@ -24,6 +24,8 @@ class HomeViewModel @Inject constructor(
 
     private val _ownerName = MutableStateFlow<String>("")
     val ownerName: StateFlow<String> = _ownerName
+    private val _ownerPhotoUrl = MutableStateFlow<String>("")
+    val ownerPhotoUrl: StateFlow<String> = _ownerPhotoUrl
     private val _spaces = MutableStateFlow<List<Space>>(emptyList())
     val spaces: StateFlow<List<Space>> = _spaces
 
@@ -58,8 +60,17 @@ class HomeViewModel @Inject constructor(
         val u = userRepository.getUserById(userId)
         return User(
             userId = u?.userId ?: "Unknown",
-            userName = u?.userName ?: "Unknown"
+            userName = u?.userName ?: "Unknown",
+            photoUrl = u?.photoUrl ?: ""
         )
+    }
+
+    fun loadOwner() {
+        viewModelScope.launch {
+            val u = userRepository.getUserById(userId)
+            _ownerName.value = u?.userName ?: "Guest User"
+            _ownerPhotoUrl.value = u?.photoUrl ?: ""
+        }
     }
 }
 

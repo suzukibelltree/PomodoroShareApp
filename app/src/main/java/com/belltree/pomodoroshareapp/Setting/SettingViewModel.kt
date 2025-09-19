@@ -3,7 +3,9 @@ package com.belltree.pomodoroshareapp.Setting
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.belltree.pomodoroshareapp.domain.models.User
 import com.belltree.pomodoroshareapp.domain.repository.AuthRepository
+import com.belltree.pomodoroshareapp.domain.repository.UserRepository
 import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
@@ -11,6 +13,7 @@ import jakarta.inject.Inject
 @HiltViewModel
 class SettingViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    private val userRepository: UserRepository
 ) : ViewModel(
 ) {
     // DI 未導入のため内部生成（将来 Hilt へ移行予定）
@@ -33,5 +36,15 @@ class SettingViewModel @Inject constructor(
         _currentUser.value = null
         _isNewUser.value = false
         _errorMessage.value = null
+    }
+    suspend fun updateUserProfiles(
+        goalStudyTime: String
+    ){
+        _isLoading.value = true
+        userRepository.updateUserToFirestore(
+            user = User(
+                goalStudyTime = goalStudyTime.toInt()
+            )
+        )
     }
 }
