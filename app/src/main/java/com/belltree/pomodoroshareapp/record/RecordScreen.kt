@@ -1,5 +1,6 @@
 package com.belltree.pomodoroshareapp.Record
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,6 +30,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 import com.belltree.pomodoroshareapp.ui.theme.PomodoroAppColors
+import java.time.Instant
+import java.time.YearMonth
+import java.time.ZoneId
 
 @Composable
 fun RecordScreen(
@@ -38,8 +42,17 @@ fun RecordScreen(
 ) {
     var showStatic by remember { mutableStateOf(true) }
     val records by recordViewModel.records.collectAsState()
+    val weeklySummary by recordViewModel.weeklySummaryForGraph.collectAsState()
+    val weekOffset = recordViewModel.currentWeeklyOffset.collectAsState()
+    val (startOfWeek, endOfWeek) = recordViewModel.getWeekRangeByOffset(weekOffset.value)
+    val zone = ZoneId.of("Asia/Tokyo")
+    val startOfWeekDate = Instant.ofEpochMilli(startOfWeek).atZone(zone).toLocalDate()
+    val endOfWeekDate = Instant.ofEpochMilli(endOfWeek).atZone(zone).toLocalDate()
+    val monthlySummary by recordViewModel.monthlySummaryForGraph.collectAsState()
     LaunchedEffect(Unit) {
         recordViewModel.getAllRecords(recordViewModel.userId)
+        recordViewModel.getOneWeekRecords()
+        recordViewModel.loadMonthlySummary(YearMonth.now())
     }
     Scaffold(
         topBar = {
@@ -55,6 +68,7 @@ fun RecordScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .background(Color.White)
         ) {
             Column(
                 modifier = Modifier
@@ -78,7 +92,15 @@ fun RecordScreen(
                     )
                 }
                 if (showStatic) {
-                    StaticSection()
+                    StaticSection(
+                        weeklySummary = weeklySummary,
+                        onProgressButtonClick = { recordViewModel.moveToNextWeek() },
+                        onBackButtonClick = { recordViewModel.moveToPreviousWeek() },
+                        weekOffset = weekOffset.value,
+                        startOfWeek = startOfWeekDate,
+                        endOfWeek = endOfWeekDate,
+                        monthlySummary = monthlySummary
+                    )
                 } else {
                     RecordSection(
                         records = records

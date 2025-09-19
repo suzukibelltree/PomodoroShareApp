@@ -9,4 +9,6 @@ interface RecordRepository {
     fun addRecord(record: Record)
     suspend fun addRecordReturnDocRef(record: Record): DocumentReference
     suspend fun updateRecord(recordId: String, updatedData: Record)
+    suspend fun getRecordsForRange(userId: String, startMillis: Long, endMillis: Long): List<Record>
+    suspend fun getRecordsForMonth(userId: String, startMillis: Long, todayEnd: Long): List<Record>
 }
