@@ -27,10 +27,10 @@ import com.belltree.pomodoroshareapp.ui.theme.PomodoroAppColors
 
 @Composable
 fun ConfirmDialog(
-    ondismiss: () -> Unit = {},
+    onDismiss: () -> Unit = {},
     onConfirm: () -> Unit = {},
 ) {
-    Dialog(onDismissRequest = { ondismiss() }) {
+    Dialog(onDismissRequest = { onDismiss() }) {
         Box(
             modifier = Modifier
                 .width(320.dp)
@@ -51,17 +51,17 @@ fun ConfirmDialog(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     TextButton(
-                        onClick = { ondismiss() }
+                        onClick = { onDismiss() }
                     ) {
                         Text(
                             text = "部屋に戻る",
-                            color = PomodoroAppColors.CoralOrange
+                            color = Color.Gray
                         )
                     }
                     Button(
                         onClick = { onConfirm() },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = PomodoroAppColors.LimeGreen,
+                            containerColor = PomodoroAppColors.CoralOrange,
                             contentColor = Color.White
                         ),
                         shape = RoundedCornerShape(16.dp)
