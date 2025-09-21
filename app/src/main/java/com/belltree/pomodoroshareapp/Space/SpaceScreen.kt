@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
@@ -40,9 +41,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -53,6 +56,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import coil.compose.AsyncImage
 import com.belltree.pomodoroshareapp.R
 import com.belltree.pomodoroshareapp.domain.models.Comment
 import com.belltree.pomodoroshareapp.domain.models.Space
@@ -76,9 +80,9 @@ fun SpaceScreen(
     val comments = spaceViewModel.comments.collectAsState().value
     var user by remember { mutableStateOf<User?>(null) }
     val participantsName = spaceViewModel.userNames.collectAsState().value
+    val participants = spaceViewModel.participants.collectAsState().value
     val timeUntilStart by spaceViewModel.timeUntilStartMillis.collectAsState()
     val progress by spaceViewModel.progress.collectAsState()
-    val isRunning by spaceViewModel.isRunning.collectAsState()
     val remainingTime by spaceViewModel.remainingTimeMillis.collectAsState()
     val currentSessionCount by spaceViewModel.currentSessionCount.collectAsState()
     val spaceState by spaceViewModel.spaceState.collectAsState()
@@ -95,9 +99,10 @@ fun SpaceScreen(
         user = spaceViewModel.getCurrentUserById()
     }
 
-    // 参加者リストが変更されたときにユーザー名を再取得
+    // 参加者リストが変更されたときにユーザー名と参加者情報を再取得する
     LaunchedEffect(space.participantsId) {
         spaceViewModel.fetchUserNames(space.participantsId)
+        spaceViewModel.fetchParticipants(space.participantsId)
     }
 
     DisposableEffect(lifecycleOwner) {
@@ -120,17 +125,21 @@ fun SpaceScreen(
                 title = space.spaceName,
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
                 onNavigationClick = onNavigateHome,
-                rightActionIcons = listOf(
-                    Icons.Default.ContentCopy to {
-                        clipboardManager.setText(AnnotatedString(space.spaceId))
-                        Toast.makeText(
-                            context,
-                            "スペースIDをコピーしました",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-
-                )
+                rightActionIcons =
+                    listOf(
+                        Icons.Default.ContentCopy to
+                                {
+                                    clipboardManager.setText(
+                                        AnnotatedString(space.spaceId)
+                                    )
+                                    Toast.makeText(
+                                        context,
+                                        "スペースIDをコピーしました",
+                                        Toast.LENGTH_SHORT
+                                    )
+                                        .show()
+                                }
+                    )
             )
         }
     ) { innerPadding ->
@@ -178,12 +187,13 @@ fun SpaceScreen(
                     radius = 110.dp,
                     strokeWidth = 6.dp,
                     progress = progress,
-                    progressColor = when (spaceState) {
-                        SpaceState.WAITING -> PomodoroAppColors.SkyBlue
-                        SpaceState.WORKING -> PomodoroAppColors.CoralOrange
-                        SpaceState.BREAK -> PomodoroAppColors.LimeGreen
-                        SpaceState.FINISHED -> PomodoroAppColors.LimeGreen
-                    },
+                    progressColor =
+                        when (spaceState) {
+                            SpaceState.WAITING -> PomodoroAppColors.SkyBlue
+                            SpaceState.WORKING -> PomodoroAppColors.CoralOrange
+                            SpaceState.BREAK -> PomodoroAppColors.LimeGreen
+                            SpaceState.FINISHED -> PomodoroAppColors.LimeGreen
+                        },
                     trackColor = Color.LightGray,
                     remainingTimeMillis = remainingTime,
                     spaceState = spaceState,
@@ -219,7 +229,7 @@ fun SpaceScreen(
                 }
             } else {
                 ParticipantSection(
-                    participantsName = participantsName,
+                    participants = participants,
                 )
             }
         }
@@ -314,12 +324,10 @@ private fun CommentSection(
         }
     }
     Column(modifier = Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .background(Color(0xFFE6E6E6))
-        ) {
+        Box(modifier = Modifier
+            .weight(1f)
+            .fillMaxWidth()
+            .background(Color(0xFFE6E6E6))) {
             LazyColumn(modifier = Modifier.fillMaxSize(), reverseLayout = false) {
                 items(comments) { comment ->
                     CommentRow(
@@ -329,10 +337,7 @@ private fun CommentSection(
             }
         }
         Spacer(Modifier.height(8.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             var input by remember { mutableStateOf("") }
             OutlinedTextField(
                 value = input,
@@ -343,62 +348,70 @@ private fun CommentSection(
                     .padding(start = 8.dp)
             )
             Spacer(Modifier.size(8.dp))
-            IconButton(onClick = {
-                if (input.isNotEmpty()) {
-                    spaceViewModel.addComment(
-                        spaceId = spaceId,
-                        Comment(
+            IconButton(
+                onClick = {
+                    if (input.isNotEmpty()) {
+                        spaceViewModel.addComment(
                             spaceId = spaceId,
-                            userId = user.userId,
-                            userName = user.userName,
-                            content = input,
-                            postedAt = System.currentTimeMillis()
+                            Comment(
+                                spaceId = spaceId,
+                                userId = user.userId,
+                                userName = user.userName,
+                                photoUrl = user.photoUrl,
+                                content = input,
+                                postedAt = System.currentTimeMillis()
+                            )
                         )
-                    )
+                    }
+                    input = ""
                 }
-                input = ""
-            }) {
-                Text("▶", color = Color(0xFF285D9D), fontSize = 18.sp)
-            }
+            ) { Text("▶", color = Color(0xFF285D9D), fontSize = 18.sp) }
         }
     }
 }
 
-// TODO: 引数をList<String>からList<User>に変更する
 @Composable
-private fun ParticipantSection(participantsName: List<String>) {
+private fun ParticipantSection(participants: List<User>) {
     Column(modifier = Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .background(Color(0xFFE6E6E6))
-        ) {
+        Box(modifier = Modifier
+            .weight(1f)
+            .fillMaxWidth()
+            .background(Color(0xFFE6E6E6))) {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(participantsName) { name ->
-                    ParticipantRow(name = name)
-                }
+                items(participants) { participant -> ParticipantRow(participant = participant) }
             }
         }
     }
 }
 
 @Composable
-private fun ParticipantRow(name: String) {
+private fun ParticipantRow(participant: User) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
-            painter = painterResource(R.drawable.generic_avatar),
-            contentDescription = "仮の参加者アイコン",
-            modifier = Modifier.size(36.dp)
-        )
+        if (participant.photoUrl.isNotEmpty()) {
+            AsyncImage(
+                model = participant.photoUrl,
+                contentDescription = "参加者アバター",
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop,
+                error = painterResource(R.drawable.generic_avatar)
+            )
+        } else {
+            Image(
+                painter = painterResource(R.drawable.generic_avatar),
+                contentDescription = "デフォルトアバター",
+                modifier = Modifier.size(36.dp)
+            )
+        }
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = name,
+            text = participant.userName,
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Unspecified
         )
