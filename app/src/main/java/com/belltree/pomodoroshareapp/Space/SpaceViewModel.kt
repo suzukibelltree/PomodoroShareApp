@@ -53,6 +53,9 @@ constructor(
     private val _userNames = MutableStateFlow<List<String>>(emptyList())
     val userNames: StateFlow<List<String>> = _userNames
 
+    private val _participants = MutableStateFlow<List<User>>(emptyList())
+    val participants: StateFlow<List<User>> = _participants
+
     private val _ownerName = MutableStateFlow<String>("")
     val ownerName: StateFlow<String> = _ownerName
 
@@ -101,7 +104,8 @@ constructor(
         val u = userRepository.getUserById(userId)
         return User(
             userId = u?.userId ?: "Unknown",
-            userName = u?.userName ?: "Unknown"
+            userName = u?.userName ?: "Unknown",
+            photoUrl = u?.photoUrl ?: ""
         )
     }
 
@@ -122,6 +126,21 @@ constructor(
                     u?.userName ?: "Unknown"
                 }
             _userNames.value = names
+        }
+    }
+
+    fun fetchParticipants(userIds: List<String>) {
+        viewModelScope.launch {
+            val users =
+                userIds.map { userId ->
+                    val u = userRepository.getUserById(userId)
+                    User(
+                        userId = u?.userId ?: userId,
+                        userName = u?.userName ?: "Unknown",
+                        photoUrl = u?.photoUrl ?: ""
+                    )
+                }
+            _participants.value = users
         }
     }
 
@@ -190,19 +209,22 @@ constructor(
                             _progress.value = remaining.toFloat() / breakDuration
                         }
                     }
-                    if (previousState == SpaceState.WORKING && _spaceState.value == SpaceState.BREAK) {
+                    if (previousState == SpaceState.WORKING &&
+                        _spaceState.value == SpaceState.BREAK
+                    ) {
                         val finishedSession = _currentSessionCount.value
                         if (finishedSession == 1) {
                             // 1セッション目終了
-                            val newRecord = Record(
-                                userId = userId,
-                                roomId = space.spaceId,
-                                roomName = space.spaceName,
-                                startTime = space.startTime,
-                                endTime = System.currentTimeMillis(),
-                                durationMinutes = 25,
-                                createdAt = space.createdAt
-                            )
+                            val newRecord =
+                                Record(
+                                    userId = userId,
+                                    roomId = space.spaceId,
+                                    roomName = space.spaceName,
+                                    startTime = space.startTime,
+                                    endTime = System.currentTimeMillis(),
+                                    durationMinutes = 25,
+                                    createdAt = space.createdAt
+                                )
                             viewModelScope.launch {
                                 val myCommentList = getMyCommentsOnce(space.spaceId)
                                 _myComments.value = myCommentList
@@ -220,7 +242,7 @@ constructor(
                     }
 
                     previousState = _spaceState.value
-                    delay(1000)  // 1秒ごとに更新する
+                    delay(1000) // 1秒ごとに更新する
                 }
             }
     }
@@ -258,9 +280,10 @@ constructor(
         viewModelScope.launch {
             spaceRepository.observeSpace(spaceId).collect { latest ->
                 _space.value = latest
-                // 参加者リストが変更された場合、ユーザー名を再取得
-                latest?.let { space ->
+                // 参加者リストが変更された場合、ユーザー名と参加者情報を再取得
+                latest.let { space ->
                     fetchUserNames(space.participantsId)
+                    fetchParticipants(space.participantsId)
                     fetchOwnerName(space.ownerId)
                 }
             }
@@ -269,32 +292,30 @@ constructor(
 
     fun addRecord(record: Record, commentList: List<Comment?>? = null) {
         viewModelScope.launch {
-            val finalRecord = if (commentList != null) {
-                record.copy(taskDescription = commentsToTaskDescription(commentList))
-            } else {
-                record
-            }
+            val finalRecord =
+                if (commentList != null) {
+                    record.copy(taskDescription = commentsToTaskDescription(commentList))
+                } else {
+                    record
+                }
 
             val docRef = recordRepository.addRecordReturnDocRef(finalRecord)
             currentRecordId = docRef.id
         }
     }
 
-
     fun upDateRecord(newCommentList: List<Comment?>) {
         val recordId = currentRecordId ?: return
 
-        val updatedRecord = Record(
-            endTime = System.currentTimeMillis(),
-            durationMinutes = currentSessionCount.value * 25,
-            taskDescription = commentsToTaskDescription(newCommentList)
-        )
+        val updatedRecord =
+            Record(
+                endTime = System.currentTimeMillis(),
+                durationMinutes = currentSessionCount.value * 25,
+                taskDescription = commentsToTaskDescription(newCommentList)
+            )
 
-        viewModelScope.launch {
-            recordRepository.updateRecord(recordId, updatedRecord)
-        }
+        viewModelScope.launch { recordRepository.updateRecord(recordId, updatedRecord) }
     }
-
 
     private fun commentsToTaskDescription(commentList: List<Comment?>): List<String> {
         return commentList.sortedBy { it?.postedAt }.map { it?.content ?: "" }
