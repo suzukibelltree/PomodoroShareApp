@@ -19,6 +19,7 @@ class HomeViewModel @Inject constructor(
     private val spaceRepository: SpaceRepository,
     private val userRepository: UserRepository,
     private val auth: FirebaseAuth,
+    private val recentlyLeftSpaceManager: RecentlyLeftSpaceManager,
 ) : ViewModel() {
     val userId: String = auth.currentUser?.uid ?: "Unknown"
 
@@ -46,6 +47,8 @@ class HomeViewModel @Inject constructor(
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    val recentlyLeftSpaceId: StateFlow<String?> = recentlyLeftSpaceManager.recentlyLeftSpaceId
 
     fun load() {
         if (_isLoading.value) return

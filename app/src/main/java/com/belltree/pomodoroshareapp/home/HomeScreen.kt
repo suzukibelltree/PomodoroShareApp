@@ -76,12 +76,21 @@ fun HomeScreen(
 	val isLoading by homeViewModel.isLoading.collectAsState()
 	var keyword by rememberSaveable { mutableStateOf("") }
 	var selectedLabel: SpaceState? by rememberSaveable { mutableStateOf<SpaceState?>(null) }
-	val filteredSpaces = spaces
+    val recentlyLeftSpaceId by homeViewModel.recentlyLeftSpaceId.collectAsState()
+
+    val filteredSpaces = spaces
 		.filter { space ->
 			keyword.isBlank() || space.spaceName.contains(keyword, ignoreCase = true) //==Query
 		}
 		.filter { space ->
 			selectedLabel == null || space.spaceState == selectedLabel//==Filter
+		}
+		.let { list ->
+			val idx = list.indexOfFirst { it.spaceId == recentlyLeftSpaceId }
+			if (idx >= 0) {
+				val target = list[idx]
+				listOf(target) + list.filterIndexed { i, _ -> i != idx }
+			} else list
 		}
 	LaunchedEffect(homeViewModel, spaces.isEmpty()) {
 		if (spaces.isEmpty()) {
@@ -102,6 +111,7 @@ fun HomeScreen(
 				onNavigationClick = onNavigateRecord,
 				additionalNavigationIcons = listOf(
 					Icons.Filled.SignalCellularAlt to onNavigateRecord,
+//					Icons.Filled.Search to
 				),
 //				rightActionIcons = listOf(
 //					Icons.Filled.History to onNavigateRecord,
@@ -158,7 +168,8 @@ fun HomeScreen(
 						HomeRow(
 							space = item,
 							onSpaceClick = { id -> onNavigateSpace(id) },
-							modifier = Modifier.fillMaxWidth()
+							modifier = Modifier.fillMaxWidth(),
+							highlight = item.spaceId == recentlyLeftSpaceId
 						)
 					}
 				}

@@ -13,6 +13,7 @@ import com.belltree.pomodoroshareapp.domain.repository.RecordRepository
 import com.belltree.pomodoroshareapp.domain.repository.SpaceRepository
 import com.belltree.pomodoroshareapp.domain.repository.UserRepository
 import com.belltree.pomodoroshareapp.notification.NotificationHelper
+import com.belltree.pomodoroshareapp.home.RecentlyLeftSpaceManager
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
@@ -33,7 +34,8 @@ constructor(
     private val spaceRepository: SpaceRepository,
     private val userRepository: UserRepository,
     private val auth: FirebaseAuth,
-    private val notificationHelper: NotificationHelper
+    private val notificationHelper: NotificationHelper,
+    private val recentlyLeftSpaceManager: RecentlyLeftSpaceManager
 ) : ViewModel() {
     val userId: String = auth.currentUser?.uid ?: "Unknown"
     private val _records = MutableStateFlow<List<Record>>(emptyList())
@@ -317,5 +319,9 @@ constructor(
         super.onCleared()
         timerJob?.cancel()
         backgroundNotificationJob?.cancel()
+    }
+
+    fun markRecentlyLeft(spaceId: String) {
+        recentlyLeftSpaceManager.mark(spaceId)
     }
 }
