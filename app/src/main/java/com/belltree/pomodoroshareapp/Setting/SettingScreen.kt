@@ -26,6 +26,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 import kotlinx.coroutines.launch
 import androidx.lifecycle.viewModelScope
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun SettingScreen(
@@ -36,6 +37,9 @@ fun SettingScreen(
 ) {
 
     var goalStudyTimeInput by remember { mutableStateOf("") }
+    LaunchedEffect(Unit) {
+        settingViewModel.loadCurrentUserGoal()
+    }
 
     Scaffold(
         topBar = {
@@ -83,6 +87,10 @@ fun SettingScreen(
                     },
                 ){
                     Text("目標を設定する")
+                }
+                val currentGoal = settingViewModel.goalStudyTime.value
+                if (currentGoal != null) {
+                    Text(text = "目標時間: ${currentGoal}")
                 }
                 Button(onClick = onSignOut) { Text("Sign Out") }
             }

@@ -3,12 +3,14 @@ package com.belltree.pomodoroshareapp.Setting
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.belltree.pomodoroshareapp.domain.models.User
 import com.belltree.pomodoroshareapp.domain.repository.AuthRepository
 import com.belltree.pomodoroshareapp.domain.repository.UserRepository
 import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class SettingViewModel @Inject constructor(
@@ -30,6 +32,9 @@ class SettingViewModel @Inject constructor(
     private val _isNewUser = mutableStateOf(false)
     val isNewUser: State<Boolean> = _isNewUser
 
+    private val _goalStudyTime = mutableStateOf<Int?>(null)
+    val goalStudyTime: State<Int?> = _goalStudyTime
+
     // サインアウトを行う関数
     fun signOut() {
         authRepository.signOut()
@@ -41,10 +46,28 @@ class SettingViewModel @Inject constructor(
         goalStudyTime: String
     ){
         _isLoading.value = true
+        val uid = _currentUser.value?.uid
+        val goal = goalStudyTime.toIntOrNull()
+
+        if (uid == null || goal == null) {
+            _errorMessage.value = "ユーザーIDまたは目標時間が不正です"
+            _isLoading.value = false
+            return
+        }
+
         userRepository.updateUserToFirestore(
-            user = User(
-                goalStudyTime = goalStudyTime.toInt()
-            )
+            userId = uid,
+            updates = mapOf("goalStudyTime" to goal)
         )
+        _goalStudyTime.value = goal
+        _isLoading.value = false
+    }
+
+    fun loadCurrentUserGoal() {
+        val uid = _currentUser.value?.uid ?: return
+        viewModelScope.launch {
+            val user = userRepository.getUserById(uid)
+            _goalStudyTime.value = user?.goalStudyTime
+        }
     }
 }

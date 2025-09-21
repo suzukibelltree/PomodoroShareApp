@@ -18,9 +18,9 @@ class UserRepositoryImpl @Inject constructor(
             throw e
         }
     }
-    override suspend fun updateUserToFirestore(user: User) {
+    override suspend fun updateUserToFirestore(userId: String, updates: Map<String, Any?>) {
         try {
-            db.collection("users").document(user.userId).set(user).await()
+            db.collection("users").document(userId).update(updates).await()
         } catch (e: Exception) {
             Log.e("UserRepository", "Failed to update user", e)
             throw e
