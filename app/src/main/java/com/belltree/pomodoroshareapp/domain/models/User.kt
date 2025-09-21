@@ -4,5 +4,6 @@ data class User(
     val userId: String = "",
     val userName: String = "",
     val photoUrl: String = "",
-    val goalStudyTime: Int = 0
+    val goalStudyTime: Long = 0,
+    val currentStudyTime: Long = 0,
 )

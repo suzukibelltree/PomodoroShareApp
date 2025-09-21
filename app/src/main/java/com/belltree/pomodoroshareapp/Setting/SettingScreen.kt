@@ -27,6 +27,10 @@ import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 import kotlinx.coroutines.launch
 import androidx.lifecycle.viewModelScope
 import androidx.compose.runtime.LaunchedEffect
+import com.belltree.pomodoroshareapp.notification.NoonAlarmScheduler
+import com.belltree.pomodoroshareapp.notification.NotificationPermissionManager
+import androidx.compose.ui.platform.LocalContext
+import jakarta.inject.Inject
 
 @Composable
 fun SettingScreen(
@@ -36,6 +40,7 @@ fun SettingScreen(
     onNavigateHome: () -> Unit = {}
 ) {
 
+    val context = LocalContext.current
     var goalStudyTimeInput by remember { mutableStateOf("") }
     LaunchedEffect(Unit) {
         settingViewModel.loadCurrentUserGoal()
@@ -82,6 +87,9 @@ fun SettingScreen(
                                 settingViewModel.updateUserProfiles(
                                     goalStudyTime = goalStudyTimeInput
                                 )
+                                // 目標設定後に12:00のリマインドをスケジュール
+                                NoonAlarmScheduler.cancelDailyNoon(context)
+                                NoonAlarmScheduler.scheduleDailyNoon(context)
                             }
                         }
                     },
