@@ -45,7 +45,8 @@ import java.util.Locale
 fun HomeRow(
     space: Space,
     modifier: Modifier = Modifier,
-    onSpaceClick: (String) -> Unit
+    onSpaceClick: (String) -> Unit,
+    highlight: Boolean = false
 ) {
     Card(
         modifier = modifier
@@ -58,7 +59,7 @@ fun HomeRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFFF3F3F3))//指定しないと自動で色が割り当てられる
+                .background(if (highlight) Color(0xFFFFF4E5) else Color(0xFFF3F3F3))//指定しないと自動で色が割り当てられる
                 .padding(16.dp)
         ) {
             SpaceContent(content = space.spaceName)

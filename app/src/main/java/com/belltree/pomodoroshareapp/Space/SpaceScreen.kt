@@ -74,7 +74,7 @@ fun SpaceScreen(
     modifier: Modifier = Modifier,
     spaceViewModel: SpaceViewModel,
     space: Space,
-    onNavigateHome: () -> Unit = {}
+    onNavigateHome: (String) -> Unit = {}
 ) {
 
     val comments = spaceViewModel.comments.collectAsState().value
@@ -124,22 +124,18 @@ fun SpaceScreen(
             AppTopBar(
                 title = space.spaceName,
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
-                onNavigationClick = onNavigateHome,
-                rightActionIcons =
-                    listOf(
-                        Icons.Default.ContentCopy to
-                                {
-                                    clipboardManager.setText(
-                                        AnnotatedString(space.spaceId)
-                                    )
-                                    Toast.makeText(
-                                        context,
-                                        "スペースIDをコピーしました",
-                                        Toast.LENGTH_SHORT
-                                    )
-                                        .show()
-                                }
-                    )
+                onNavigationClick = { showDialog = true },
+                rightActionIcons = listOf(
+                    Icons.Default.ContentCopy to {
+                        clipboardManager.setText(AnnotatedString(space.spaceId))
+                        Toast.makeText(
+                            context,
+                            "スペースIDをコピーしました",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+
+                )
             )
         }
     ) { innerPadding ->
@@ -239,7 +235,8 @@ fun SpaceScreen(
             onDismiss = { showDialog = false },
             onConfirm = {
                 showDialog = false
-                onNavigateHome()
+                spaceViewModel.markRecentlyLeft(space.spaceId)
+                onNavigateHome(space.spaceId)
             }
         )
     }

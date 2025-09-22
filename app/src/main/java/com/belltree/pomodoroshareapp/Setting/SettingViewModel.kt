@@ -32,8 +32,8 @@ class SettingViewModel @Inject constructor(
     private val _isNewUser = mutableStateOf(false)
     val isNewUser: State<Boolean> = _isNewUser
 
-    private val _goalStudyTime = mutableStateOf<Int?>(null)
-    val goalStudyTime: State<Int?> = _goalStudyTime
+    private val _goalStudyTime = mutableStateOf<Long?>(null)
+    val goalStudyTime: State<Long?> = _goalStudyTime
 
     // サインアウトを行う関数
     fun signOut() {
@@ -47,7 +47,7 @@ class SettingViewModel @Inject constructor(
     ){
         _isLoading.value = true
         val uid = _currentUser.value?.uid
-        val goal = goalStudyTime.toIntOrNull()
+        val goal = goalStudyTime.toLongOrNull()
 
         if (uid == null || goal == null) {
             _errorMessage.value = "ユーザーIDまたは目標時間が不正です"
