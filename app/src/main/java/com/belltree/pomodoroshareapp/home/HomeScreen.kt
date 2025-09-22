@@ -16,6 +16,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -56,6 +57,7 @@ import com.belltree.pomodoroshareapp.domain.models.Space
 import com.belltree.pomodoroshareapp.domain.models.SpaceState
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 import kotlin.String
+import android.util.Log
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -77,8 +79,11 @@ fun HomeScreen(
 	var keyword by rememberSaveable { mutableStateOf("") }
 	var selectedLabel: SpaceState? by rememberSaveable { mutableStateOf<SpaceState?>(null) }
     val recentlyLeftSpaceId by homeViewModel.recentlyLeftSpaceId.collectAsState()
+    val pinnedSpace by homeViewModel.selectedSpace.collectAsState()
+    Log.w("HomeScreen", "recentlyLeftSpaceId=$recentlyLeftSpaceId, spaces.size=${'$'}{spaces.size}")
 
-    val filteredSpaces = spaces
+	val listState = rememberLazyListState()
+	val filteredSpaces = spaces
 		.filter { space ->
 			keyword.isBlank() || space.spaceName.contains(keyword, ignoreCase = true) //==Query
 		}
@@ -92,11 +97,28 @@ fun HomeScreen(
 				listOf(target) + list.filterIndexed { i, _ -> i != idx }
 			} else list
 		}
-	LaunchedEffect(homeViewModel, spaces.isEmpty()) {
-		if (spaces.isEmpty()) {
-			homeViewModel.getUnfinishedSpaces()
-		}
+	LaunchedEffect(Unit) {
+		// 画面表示のたびに最新の未終了スペース一覧を取得
+		homeViewModel.load()
 		homeViewModel.loadOwner()
+	}
+
+	LaunchedEffect(recentlyLeftSpaceId) {
+		// 退出直後にも一覧を再取得して先頭に並び替えられるようにする
+		homeViewModel.load()
+		// フィルターで非表示になっている可能性があるためクリアする
+		selectedLabel = null
+		// 検索キーワードで非表示になっている可能性があるためクリアする
+		keyword = ""
+        // 一覧に存在しない場合に備えて対象スペースを明示的に取得
+        recentlyLeftSpaceId?.let { id ->
+            Log.w("HomeScreen", "fetch pinned space id=${'$'}id")
+            homeViewModel.getSpaceById(id)
+        }
+		// 一番上にスクロールしてハイライトを見せる
+		if (recentlyLeftSpaceId != null && filteredSpaces.isNotEmpty()) {
+			listState.scrollToItem(0)
+		}
 	}
 	Scaffold(
 		topBar = {
@@ -153,10 +175,11 @@ fun HomeScreen(
 					CircularProgressIndicator()
 				}
 			} else {
-				LazyColumn(
+                LazyColumn(
 					modifier = Modifier.fillMaxSize(),
 					contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-					verticalArrangement = Arrangement.spacedBy(8.dp)
+					verticalArrangement = Arrangement.spacedBy(8.dp),
+					state = listState
 				) {
 					item() {
 						HomeGreetingSection(
@@ -164,7 +187,21 @@ fun HomeScreen(
 							modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
 						)
 					}
-					items(filteredSpaces) { item ->
+                    // 退出した部屋を最上部に固定表示（一覧に無い場合でも表示）
+                    val topSpace = filteredSpaces.firstOrNull { it.spaceId == recentlyLeftSpaceId } ?: pinnedSpace
+                    Log.w("HomeScreen", "topSpace: ${'$'}topSpace  pinnedId=${'$'}{pinnedSpace?.spaceId}")
+                    if (topSpace != null) {
+                        item("pinned-${'$'}{topSpace.spaceId}") {
+                            HomeRow(
+                                space = topSpace,
+                                onSpaceClick = { id -> onNavigateSpace(id) },
+                                modifier = Modifier.fillMaxWidth(),
+                                highlight = topSpace.spaceId == recentlyLeftSpaceId
+                            )
+                        }
+                    }
+                    val rest = topSpace?.let { pinned -> filteredSpaces.filter { it.spaceId != pinned.spaceId } } ?: filteredSpaces
+                    items(rest) { item ->
 						HomeRow(
 							space = item,
 							onSpaceClick = { id -> onNavigateSpace(id) },

@@ -88,7 +88,10 @@ fun AppNavHost() {
                 SpaceScreen(
                         spaceViewModel = viewModel,
                         space = target,
-                        onNavigateHome = { navController.navigate("home") }
+                        onNavigateHome = { leftId ->
+                            // popBackStack to home so we don't stack multiple instances
+                            navController.navigate("home")
+                        }
                 )
             }
         }

@@ -70,7 +70,7 @@ fun SpaceScreen(
     modifier: Modifier = Modifier,
     spaceViewModel: SpaceViewModel,
     space: Space,
-    onNavigateHome: () -> Unit = {}
+    onNavigateHome: (String) -> Unit = {}
 ) {
 
     val comments = spaceViewModel.comments.collectAsState().value
@@ -119,7 +119,7 @@ fun SpaceScreen(
             AppTopBar(
                 title = space.spaceName,
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
-                onNavigationClick = onNavigateHome,
+                onNavigationClick = { showDialog = true },
                 rightActionIcons = listOf(
                     Icons.Default.ContentCopy to {
                         clipboardManager.setText(AnnotatedString(space.spaceId))
@@ -230,7 +230,7 @@ fun SpaceScreen(
             onConfirm = {
                 showDialog = false
                 spaceViewModel.markRecentlyLeft(space.spaceId)
-                onNavigateHome()
+                onNavigateHome(space.spaceId)
             }
         )
     }

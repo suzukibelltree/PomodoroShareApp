@@ -1,5 +1,6 @@
 package com.belltree.pomodoroshareapp.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.belltree.pomodoroshareapp.domain.models.Space
@@ -40,7 +41,13 @@ class HomeViewModel @Inject constructor(
     }
 
     suspend fun getSpaceById(spaceId: String): Space? {
+        Log.w("HomeViewModel", "getSpaceById called with id=$spaceId")
         val space = spaceRepository.getSpaceById(spaceId)
+        if (space == null) {
+            Log.w("HomeViewModel", "getSpaceById: not found for id=$spaceId")
+        } else {
+            Log.w("HomeViewModel", "getSpaceById: found ${'$'}{space.spaceName}")
+        }
         _selectedSpace.value = space
         return space
     }
@@ -74,6 +81,11 @@ class HomeViewModel @Inject constructor(
             _ownerName.value = u?.userName ?: "Guest User"
             _ownerPhotoUrl.value = u?.photoUrl ?: ""
         }
+    }
+
+    fun markRecentlyLeft(spaceId: String) {
+        Log.w("HomeViewModel", "markRecentlyLeft id=$spaceId")
+        recentlyLeftSpaceManager.mark(spaceId)
     }
 }
 

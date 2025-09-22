@@ -322,6 +322,7 @@ constructor(
     }
 
     fun markRecentlyLeft(spaceId: String) {
+        Log.w("SpaceViewModel", "markRecentlyLeft called with id=$spaceId")
         recentlyLeftSpaceManager.mark(spaceId)
     }
 }

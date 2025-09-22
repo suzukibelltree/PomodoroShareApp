@@ -31,6 +31,11 @@ import com.belltree.pomodoroshareapp.notification.NoonAlarmScheduler
 import com.belltree.pomodoroshareapp.notification.NotificationPermissionManager
 import androidx.compose.ui.platform.LocalContext
 import jakarta.inject.Inject
+import android.os.Build
+import android.app.AlarmManager
+import android.content.Intent
+import android.provider.Settings
+import android.widget.Toast
 
 @Composable
 fun SettingScreen(
@@ -87,7 +92,17 @@ fun SettingScreen(
                                 settingViewModel.updateUserProfiles(
                                     goalStudyTime = goalStudyTimeInput
                                 )
-                                // 目標設定後に12:00のリマインドをスケジュール
+                                // Android 12+ では正確なアラームの許可が必要
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                    val alarmManager = context.getSystemService(AlarmManager::class.java)
+                                    if (alarmManager != null && !alarmManager.canScheduleExactAlarms()) {
+                                        Toast.makeText(context, "正確なアラームの許可を設定画面で有効にしてください", Toast.LENGTH_LONG).show()
+                                        val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        context.startActivity(intent)
+                                    }
+                                }
+                                // 目標設定後に12:00のリマインドをスケジュール（許可がなければ近似アラームで設定）
                                 NoonAlarmScheduler.cancelDailyNoon(context)
                                 NoonAlarmScheduler.scheduleDailyNoon(context)
                             }
