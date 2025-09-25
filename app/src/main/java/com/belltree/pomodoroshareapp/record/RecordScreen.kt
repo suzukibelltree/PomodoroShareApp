@@ -123,7 +123,7 @@ fun AnalyticsButton(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
             containerColor = color,
-            contentColor = if (isSelected) Color.White else Color.Black
+            contentColor = if (isSelected) Color.White else Color.White
         ),
         shape = RoundedCornerShape(
             if (isSelected) 24.dp else 8.dp
