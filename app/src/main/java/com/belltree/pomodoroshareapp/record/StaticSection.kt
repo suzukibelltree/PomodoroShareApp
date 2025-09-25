@@ -260,7 +260,7 @@ fun DailyWorkDurationGraph(
 fun MonthlyCumulativeWorkDurationGraph(
     summary: List<DailyStudySummary>,
     month: YearMonth = YearMonth.now(),
-) {
+) {     
     val zone = ZoneId.of("Asia/Tokyo")
     val today = LocalDate.now(zone)
     val startOfMonth = month.atDay(1)

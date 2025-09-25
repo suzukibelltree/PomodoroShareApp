@@ -57,7 +57,8 @@ fun AppNavHost() {
             val viewModel: MakeSpaceViewModel = hiltViewModel()
             MakeSpaceScreen(
                     makeSpaceViewModel = viewModel,
-                    onNavigateHome = { navController.navigate("home") }
+                    onNavigateHome = { navController.navigate("home") },
+                    onNavigateSpace = { id -> navController.navigate("space/$id") }
             )
         }
 

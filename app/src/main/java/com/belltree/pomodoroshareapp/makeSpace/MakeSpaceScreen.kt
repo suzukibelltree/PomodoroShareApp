@@ -60,13 +60,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.TimePicker
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MakeSpaceScreen(
     modifier: Modifier = Modifier,
     makeSpaceViewModel: MakeSpaceViewModel,
-    onNavigateHome: () -> Unit = {}
+    onNavigateHome: () -> Unit = {},
+    onNavigateSpace: (String) -> Unit = {},
 ) {
     var roomName by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
@@ -89,6 +93,7 @@ fun MakeSpaceScreen(
 
     var user by remember { mutableStateOf<User?>(null) }
     var sessionCountInput by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         user = makeSpaceViewModel.getCurrentUserById()
@@ -476,21 +481,23 @@ fun MakeSpaceScreen(
                         .atZone(zone)
                         .toInstant()
                         .toEpochMilli()
-                    makeSpaceViewModel.createSpace(
-                        Space(
-                            spaceId = "",
-                            spaceName = roomName,
-                            ownerId = user?.userId ?: "01",
-                            ownerName = user?.userName ?: "ゲスト", //firebaseのdisplayName要デバック
-                            startTime = startTime,
-                            sessionCount = sessionCountInput.toInt(),
-                            participantsId = emptyList(),
-                            createdAt = System.currentTimeMillis(),
-                            lastUpdated = System.currentTimeMillis(),
-                            isPrivate = isPrivate
-                        )
+                    val newSpace = Space(
+                        spaceId = "",
+                        spaceName = roomName,
+                        ownerId = user?.userId ?: "01",
+                        ownerName = user?.userName ?: "ゲスト",
+                        startTime = startTime,
+                        sessionCount = sessionCountInput.toInt(),
+                        participantsId = emptyList(),
+                        createdAt = System.currentTimeMillis(),
+                        lastUpdated = System.currentTimeMillis(),
+                        isPrivate = isPrivate
                     )
-                    onNavigateHome()
+                    // 作成後のIDを取得してルームへ遷移
+                    coroutineScope.launch {
+                        val id = makeSpaceViewModel.createSpaceReturnId(newSpace)
+                        onNavigateSpace(id)
+                    }
                 },
                 modifier = Modifier
                     .width(161.dp)

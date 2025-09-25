@@ -41,7 +41,6 @@ class HomeViewModel @Inject constructor(
     }
 
     suspend fun getSpaceById(spaceId: String): Space? {
-        Log.w("HomeViewModel", "getSpaceById called with id=$spaceId")
         val space = spaceRepository.getSpaceById(spaceId)
         if (space == null) {
             Log.w("HomeViewModel", "getSpaceById: not found for id=$spaceId")

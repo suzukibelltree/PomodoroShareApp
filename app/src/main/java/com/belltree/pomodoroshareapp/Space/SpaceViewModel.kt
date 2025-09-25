@@ -8,6 +8,7 @@ import com.belltree.pomodoroshareapp.domain.models.Record
 import com.belltree.pomodoroshareapp.domain.models.Space
 import com.belltree.pomodoroshareapp.domain.models.SpaceState
 import com.belltree.pomodoroshareapp.domain.models.User
+import com.belltree.pomodoroshareapp.domain.models.UserSpaceState
 import com.belltree.pomodoroshareapp.domain.repository.CommentRepository
 import com.belltree.pomodoroshareapp.domain.repository.RecordRepository
 import com.belltree.pomodoroshareapp.domain.repository.SpaceRepository
@@ -102,6 +103,12 @@ constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private fun setUserSpaceState(state: UserSpaceState) {
+        viewModelScope.launch {
+            userRepository.updateUserToFirestore(userId, mapOf("userSpaceState" to state))
+        }
+    }
+
     suspend fun getCurrentUserById(): User {
         val u = userRepository.getUserById(userId)
         return User(
@@ -161,12 +168,22 @@ constructor(
         }
     }
 
+    //ユーザー情報を更新
+    fun updateUserToFirebase(spaceId: String, updates: Map<String, Any?>){
+        viewModelScope.launch{
+            userRepository.updateUserToFirestore(spaceId, updates)
+        }
+    }
+
     // タイマーのUI表示のために情報をセットする関数(部屋入室時に1回だけ呼ぶ)
     fun setSpace(space: Space) {
         sessionCount = space.sessionCount
         startTime = space.startTime
         _currentSessionCount.value = space.currentSessionCount
         _remainingTimeMillis.value = workDuration
+
+        // ユーザーが部屋に参加中のため、状態を Use に設定（Firestore 更新）
+        setUserSpaceState(UserSpaceState.Use)
 
         timerJob?.cancel()
         timerJob =
@@ -231,6 +248,12 @@ constructor(
                                 val myCommentList = getMyCommentsOnce(space.spaceId)
                                 _myComments.value = myCommentList
                                 addRecord(newRecord, commentList = myCommentList)
+                                // セッション完了時にポイント加算
+                                viewModelScope.launch {
+                                    val me = userRepository.getUserById(userId)
+                                    val newPoints = (me?.totalStudyPoint ?: 0) + 10
+                                    userRepository.updateUserToFirestore(userId, mapOf("totalStudyPoint" to newPoints))
+                                }
                             }
                         } else {
                             // 2セッション目以降終了
@@ -238,6 +261,12 @@ constructor(
                                 val myCommentList = getMyCommentsOnce(space.spaceId)
                                 _myComments.value = myCommentList
                                 upDateRecord(newCommentList = myCommentList)
+                                // セッション完了時にポイント加算
+                                viewModelScope.launch {
+                                    val me = userRepository.getUserById(userId)
+                                    val newPoints = (me?.totalStudyPoint ?: 0) + 10
+                                    userRepository.updateUserToFirestore(userId, mapOf("totalStudyPoint" to newPoints))
+                                }
                                 Log.d("hoge", "Record updated")
                             }
                         }
@@ -329,21 +358,27 @@ constructor(
             viewModelScope.launch {
                 delay(30_000) // 30秒後に通知
                 notificationHelper.showNotification("ポモドーロタイマー", "作業に戻ってください！")
+                setUserSpaceState(UserSpaceState.Exit)
             }
     }
 
     fun onScreenForegrounded() {
         backgroundNotificationJob?.cancel()
+        setUserSpaceState(UserSpaceState.Use)
     }
 
     override fun onCleared() {
         super.onCleared()
         timerJob?.cancel()
         backgroundNotificationJob?.cancel()
+        // 画面・ViewModel が破棄される＝部屋から退出とみなし、状態を Exit に設定
+        setUserSpaceState(UserSpaceState.Exit)
     }
 
     fun markRecentlyLeft(spaceId: String) {
         Log.w("SpaceViewModel", "markRecentlyLeft called with id=$spaceId")
+        // 明示的に退出したため、状態を Exit に設定
+        setUserSpaceState(UserSpaceState.Exit)
         recentlyLeftSpaceManager.mark(spaceId)
     }
 }
