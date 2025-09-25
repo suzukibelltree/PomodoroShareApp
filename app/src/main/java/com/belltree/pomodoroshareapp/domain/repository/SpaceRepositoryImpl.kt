@@ -39,7 +39,9 @@ class SpaceRepositoryImpl @Inject constructor(
 
     // 部屋に入ったときに部屋の情報を取得する(SpaceViewModelで使用)
     override suspend fun getSpaceById(spaceId: String): Space? {
-        val snapshot = db.collection("spaces").document(spaceId).get().await()
+        val trimmed = spaceId.trim()
+        if (trimmed.isEmpty()) return null
+        val snapshot = db.collection("spaces").document(trimmed).get().await()
         return snapshot.toSpace()
     }
 

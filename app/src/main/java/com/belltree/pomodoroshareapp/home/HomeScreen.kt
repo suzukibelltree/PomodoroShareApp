@@ -122,8 +122,11 @@ fun HomeScreen(
 		keyword = ""
         // 一覧に存在しない場合に備えて対象スペースを明示的に取得
         recentlyLeftSpaceId?.let { id ->
-            Log.w("HomeScreen", "fetch pinned space id=${'$'}id")
-            homeViewModel.getSpaceById(id)
+            val trimmed = id.trim()
+            if (trimmed.isNotEmpty()) {
+                Log.w("HomeScreen", "fetch pinned space id=${'$'}trimmed")
+                homeViewModel.getSpaceById(trimmed)
+            }
         }
 		// 一番上にスクロールしてハイライトを見せる
 		if (recentlyLeftSpaceId != null && filteredSpaces.isNotEmpty()) {
@@ -221,7 +224,7 @@ fun HomeScreen(
 			}
 		}
 		if(showIdDialog){
-			InputIDDialog(
+            InputIDDialog(
 				modifier = modifier,
                 onDismiss = { showIdDialog = false },
                 onConfirm = {
@@ -234,9 +237,12 @@ fun HomeScreen(
 		}
 
 		if (showSpaceDialog) {
-			LaunchedEffect(showSpaceDialog, inputId) {
+            LaunchedEffect(showSpaceDialog, inputId) {
 				// ダイアログ表示時に対象スペースを取得（suspend 呼び出しはここで行う）
-				homeViewModel.getSpaceById(inputId)
+                val trimmed = inputId.trim()
+                if (trimmed.isNotEmpty()) {
+                    homeViewModel.getSpaceById(trimmed)
+                }
 			}
 			pinnedSpace?.let { sp ->
 				ShowSpaceDialog(
