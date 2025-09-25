@@ -58,6 +58,7 @@ import com.belltree.pomodoroshareapp.domain.models.SpaceState
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 import kotlin.String
 import android.util.Log
+import androidx.compose.material.icons.filled.Add
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -149,7 +150,7 @@ fun HomeScreen(
 				shape = CircleShape
 			) {
 				Icon(
-					imageVector = Icons.Filled.Groups,
+					imageVector = Icons.Filled.Add,
 					contentDescription = "Create Room",
 					tint = Color(0xFFBEDC53)
 				)
