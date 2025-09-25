@@ -42,7 +42,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
@@ -68,6 +67,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 
 @Composable
 fun SpaceScreen(
@@ -76,6 +79,13 @@ fun SpaceScreen(
     space: Space,
     onNavigateHome: (String) -> Unit = {}
 ) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White) // ← 整个画面背景纯白
+    ) {
+        // 这里写 SpaceScreen 的实际内容
+    }
 
     val comments = spaceViewModel.comments.collectAsState().value
     var user by remember { mutableStateOf<User?>(null) }
@@ -201,16 +211,30 @@ fun SpaceScreen(
             Spacer(Modifier.height(16.dp))
 
             var selectedTab by remember { mutableStateOf(0) }
-            TabRow(selectedTabIndex = selectedTab, containerColor = Color(0xFFE6E6E6)) {
-                Tab(
+
+            TabRow(
+                selectedTabIndex = selectedTab,
+                containerColor = Color(0xFFF3F3F3),
+                indicator = { tabPositions ->
+                    TabRowDefaults.Indicator(
+                        Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                        color = Color(0xFF48B3D3),
+                        height = 3.dp
+                    )
+                }
+            ) {                Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("コメント") }
+                    text = { Text("コメント") },
+                    selectedContentColor = Color(0xFF393939),
+                    unselectedContentColor = Color.Gray
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("参加者") }
+                    text = { Text("参加者") },
+                    selectedContentColor = Color(0xFF393939),
+                    unselectedContentColor = Color.Gray
                 )
             }
 
@@ -324,7 +348,7 @@ private fun CommentSection(
         Box(modifier = Modifier
             .weight(1f)
             .fillMaxWidth()
-            .background(Color(0xFFE6E6E6))) {
+            .background(Color(0xFFF3F3F3))) {
             LazyColumn(modifier = Modifier.fillMaxSize(), reverseLayout = false) {
                 items(comments) { comment ->
                     CommentRow(
@@ -373,7 +397,7 @@ private fun ParticipantSection(participants: List<User>) {
         Box(modifier = Modifier
             .weight(1f)
             .fillMaxWidth()
-            .background(Color(0xFFE6E6E6))) {
+            .background(Color(0xFFF3F3F3))) {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(participants) { participant -> ParticipantRow(participant = participant) }
             }

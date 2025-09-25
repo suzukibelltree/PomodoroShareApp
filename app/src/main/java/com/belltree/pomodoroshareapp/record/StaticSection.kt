@@ -69,11 +69,21 @@ fun StaticSection(
     weekOffset: Int = 0,
     startOfWeek: LocalDate,
     endOfWeek: LocalDate,
+    userGoalStudyTime: Long = 0L,
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
         GeminiAdviceSection()
+        Text(
+            text = "目標学習時間: $userGoalStudyTime 時間",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
         DailyWorkDurationGraph(
             summary = weeklySummary,
             onProgressButtonClick = onProgressButtonClick,
@@ -300,7 +310,7 @@ fun MonthlyCumulativeWorkDurationGraph(
                 fontWeight = FontWeight.ExtraBold
             )
             // Chart
-            val lineColor = Color(0xFF7b68ee)
+            val lineColor = Color(0xFF48B3D3)
             CartesianChartHost(
                 chart = rememberCartesianChart(
                     rememberLineCartesianLayer(

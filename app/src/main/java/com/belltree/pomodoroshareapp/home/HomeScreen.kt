@@ -63,6 +63,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.belltree.pomodoroshareapp.Space.ConfirmDialog
+import androidx.compose.material.icons.filled.Add
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -159,7 +160,7 @@ fun HomeScreen(
 				shape = CircleShape
 			) {
 				Icon(
-					imageVector = Icons.Filled.Groups,
+					imageVector = Icons.Filled.Add,
 					contentDescription = "Create Room",
 					tint = Color(0xFFBEDC53)
 				)

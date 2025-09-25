@@ -49,10 +49,12 @@ fun RecordScreen(
     val startOfWeekDate = Instant.ofEpochMilli(startOfWeek).atZone(zone).toLocalDate()
     val endOfWeekDate = Instant.ofEpochMilli(endOfWeek).atZone(zone).toLocalDate()
     val monthlySummary by recordViewModel.monthlySummaryForGraph.collectAsState()
+    val userGoalStudyTime by recordViewModel.goalStudyTime.collectAsState()
     LaunchedEffect(Unit) {
         recordViewModel.getAllRecords(recordViewModel.userId)
         recordViewModel.getOneWeekRecords()
         recordViewModel.loadMonthlySummary(YearMonth.now())
+        recordViewModel.getUserGoalStudyTimeById(recordViewModel.userId)
     }
     Scaffold(
         topBar = {
@@ -99,7 +101,8 @@ fun RecordScreen(
                         weekOffset = weekOffset.value,
                         startOfWeek = startOfWeekDate,
                         endOfWeek = endOfWeekDate,
-                        monthlySummary = monthlySummary
+                        monthlySummary = monthlySummary,
+                        userGoalStudyTime = userGoalStudyTime
                     )
                 } else {
                     RecordSection(
@@ -123,7 +126,7 @@ fun AnalyticsButton(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
             containerColor = color,
-            contentColor = if (isSelected) Color.White else Color.Black
+            contentColor = if (isSelected) Color.White else Color.White
         ),
         shape = RoundedCornerShape(
             if (isSelected) 24.dp else 8.dp
