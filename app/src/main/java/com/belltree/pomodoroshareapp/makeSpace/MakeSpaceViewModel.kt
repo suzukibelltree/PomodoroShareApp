@@ -27,6 +27,10 @@ class MakeSpaceViewModel @Inject constructor(
         }
     }
 
+    suspend fun createSpaceReturnId(space: Space): String {
+        return spaceRepository.createSpaceReturnId(space)
+    }
+
     suspend fun getCurrentUserById(): User {
         val u = userRepository.getUserById(userId)
         return User(

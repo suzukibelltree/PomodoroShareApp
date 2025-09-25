@@ -58,6 +58,11 @@ import com.belltree.pomodoroshareapp.domain.models.SpaceState
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 import kotlin.String
 import android.util.Log
+import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.belltree.pomodoroshareapp.Space.ConfirmDialog
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -80,8 +85,9 @@ fun HomeScreen(
 	var selectedLabel: SpaceState? by rememberSaveable { mutableStateOf<SpaceState?>(null) }
     val recentlyLeftSpaceId by homeViewModel.recentlyLeftSpaceId.collectAsState()
     val pinnedSpace by homeViewModel.selectedSpace.collectAsState()
-    Log.w("HomeScreen", "recentlyLeftSpaceId=$recentlyLeftSpaceId, spaces.size=${'$'}{spaces.size}")
-
+	var showSpaceDialog by remember { mutableStateOf(false) }
+	var showIdDialog by remember {mutableStateOf(false)}
+	var inputId by rememberSaveable {mutableStateOf("")}
 	val listState = rememberLazyListState()
 	val filteredSpaces = spaces
 		.filter { space ->
@@ -89,6 +95,10 @@ fun HomeScreen(
 		}
 		.filter { space ->
 			selectedLabel == null || space.spaceState == selectedLabel//==Filter
+		}
+		//非公開部屋を非表示にする
+		.filter{ space ->
+            !space.isPrivate
 		}
 		.let { list ->
 			val idx = list.indexOfFirst { it.spaceId == recentlyLeftSpaceId }
@@ -133,11 +143,8 @@ fun HomeScreen(
 				onNavigationClick = onNavigateRecord,
 				additionalNavigationIcons = listOf(
 					Icons.Filled.SignalCellularAlt to onNavigateRecord,
-//					Icons.Filled.Search to
+					Icons.Filled.Search to {showIdDialog = true}
 				),
-//				rightActionIcons = listOf(
-//					Icons.Filled.History to onNavigateRecord,
-//				),
 				onAvatarClick = onNavigateSettings
 			)
 		},
@@ -189,7 +196,6 @@ fun HomeScreen(
 					}
                     // 退出した部屋を最上部に固定表示（一覧に無い場合でも表示）
                     val topSpace = filteredSpaces.firstOrNull { it.spaceId == recentlyLeftSpaceId } ?: pinnedSpace
-                    Log.w("HomeScreen", "topSpace: ${'$'}topSpace  pinnedId=${'$'}{pinnedSpace?.spaceId}")
                     if (topSpace != null) {
                         item("pinned-${'$'}{topSpace.spaceId}") {
                             HomeRow(
@@ -200,7 +206,9 @@ fun HomeScreen(
                             )
                         }
                     }
-                    val rest = topSpace?.let { pinned -> filteredSpaces.filter { it.spaceId != pinned.spaceId } } ?: filteredSpaces
+                    val rest = topSpace?.let { pinned -> filteredSpaces
+						.filter { it.spaceId != pinned.spaceId } } ?: filteredSpaces
+						.filter { it.isPrivate == false}//非公開部屋を非表示にする
                     items(rest) { item ->
 						HomeRow(
 							space = item,
@@ -210,6 +218,35 @@ fun HomeScreen(
 						)
 					}
 				}
+			}
+		}
+		if(showIdDialog){
+			InputIDDialog(
+				modifier = modifier,
+                onDismiss = { showIdDialog = false },
+                onConfirm = {
+                    showIdDialog = false
+					showSpaceDialog = true
+                },
+                onInputIdChange = {inputId = it},
+                inputId = inputId,
+            )
+		}
+
+		if (showSpaceDialog) {
+			LaunchedEffect(showSpaceDialog, inputId) {
+				// ダイアログ表示時に対象スペースを取得（suspend 呼び出しはここで行う）
+				homeViewModel.getSpaceById(inputId)
+			}
+			pinnedSpace?.let { sp ->
+				ShowSpaceDialog(
+					onDismiss = { showSpaceDialog = false },
+					onConfirm = { id ->
+						showSpaceDialog = false
+						onNavigateSpace(id)
+					},
+					space = sp
+				)
 			}
 		}
 	}
