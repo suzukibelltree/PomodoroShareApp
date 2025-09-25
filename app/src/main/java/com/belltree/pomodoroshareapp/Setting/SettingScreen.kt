@@ -6,8 +6,7 @@ import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,8 +39,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -52,7 +49,6 @@ import com.belltree.pomodoroshareapp.R
 import com.belltree.pomodoroshareapp.notification.NoonAlarmScheduler
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 import kotlinx.coroutines.launch
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -104,6 +100,7 @@ fun SettingScreen(
                     .width(371.dp)
                     .height(456.dp)
                     .align(Alignment.TopCenter)
+                    .alpha(0.7f) // 这里指定透明度，范围 0f ~ 1f
             )
 
 
@@ -124,11 +121,10 @@ fun SettingScreen(
 
                 Text(
                     text = "一週間の目標勉強時間を決めよう\n毎週土曜日にリセットされるよ！",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
                     color = Color(0xFF234121),
                     modifier = Modifier
-                        .padding(bottom = 24.dp) // 下方留白
+                        .padding(bottom = 24.dp)
                 )
 
 
@@ -196,7 +192,7 @@ fun SettingScreen(
                     Text(
                         text = "目標を設定する",
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                         color = Color(0xF2FFFFFF),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
@@ -249,6 +245,7 @@ fun SettingScreen(
                     ) {
                         Text(
                             text = "ログアウト",
+                            fontSize = 16.sp,
                             style = TextStyle(
 //
                                 fontWeight = FontWeight(500),
