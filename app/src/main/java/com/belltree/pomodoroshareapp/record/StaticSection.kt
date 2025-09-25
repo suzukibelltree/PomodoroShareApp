@@ -300,7 +300,7 @@ fun MonthlyCumulativeWorkDurationGraph(
                 fontWeight = FontWeight.ExtraBold
             )
             // Chart
-            val lineColor = Color(0xFF7b68ee)
+            val lineColor = Color(0xFF48B3D3)
             CartesianChartHost(
                 chart = rememberCartesianChart(
                     rememberLineCartesianLayer(
