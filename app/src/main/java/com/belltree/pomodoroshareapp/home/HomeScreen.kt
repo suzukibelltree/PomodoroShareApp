@@ -1,5 +1,6 @@
 package com.belltree.pomodoroshareapp.home
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -37,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import com.belltree.pomodoroshareapp.domain.models.SpaceState
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 
+@SuppressLint("SuspiciousIndentation")
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
@@ -177,6 +179,7 @@ fun HomeScreen(
                         item("pinned-${'$'}{topSpace.spaceId}") {
                             HomeRow(
                                 space = topSpace,
+								homeViewModel = homeViewModel,
                                 onSpaceClick = { id -> onNavigateSpace(id) },
                                 modifier = Modifier.fillMaxWidth(),
                                 highlight = topSpace.spaceId == recentlyLeftSpaceId
@@ -189,17 +192,19 @@ fun HomeScreen(
                     } ?: filteredSpaces
                         .filter { it.isPrivate == false }//非公開部屋を非表示にする
                     items(rest) { item ->
-                        HomeRow(
-                            space = item,
-                            onSpaceClick = { id -> onNavigateSpace(id) },
-                            modifier = Modifier.fillMaxWidth(),
-                            highlight = item.spaceId == recentlyLeftSpaceId
-                        )
-                    }
-                }
-            }
-        }
-        if (showIdDialog) {
+
+						HomeRow(
+							space = item,
+							homeViewModel = homeViewModel,
+							onSpaceClick = { id -> onNavigateSpace(id) },
+							modifier = Modifier.fillMaxWidth(),
+							highlight = item.spaceId == recentlyLeftSpaceId
+						)
+					}
+				}
+			}
+		}
+		if(showIdDialog){
             InputIDDialog(
                 modifier = modifier,
                 onDismiss = { showIdDialog = false },
@@ -219,18 +224,19 @@ fun HomeScreen(
                 if (trimmed.isNotEmpty()) {
                     homeViewModel.getSpaceById(trimmed)
                 }
-            }
-            pinnedSpace?.let { sp ->
-                ShowSpaceDialog(
-                    onDismiss = { showSpaceDialog = false },
-                    onConfirm = { id ->
-                        showSpaceDialog = false
-                        onNavigateSpace(id)
-                    },
-                    space = sp
-                )
-            }
-        }
-    }
+			}
+			pinnedSpace?.let { sp ->
+				ShowSpaceDialog(
+					onDismiss = { showSpaceDialog = false },
+					onConfirm = { id ->
+						showSpaceDialog = false
+						onNavigateSpace(id)
+					},
+					space = sp,
+					homeViewModel = homeViewModel
+				)
+			}
+		}
+	}
 }
 

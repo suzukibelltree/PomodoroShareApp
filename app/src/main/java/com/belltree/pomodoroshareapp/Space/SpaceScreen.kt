@@ -259,7 +259,7 @@ fun SpaceScreen(
             onDismiss = { showDialog = false },
             onConfirm = {
                 showDialog = false
-                spaceViewModel.markRecentlyLeft(space.spaceId)
+                spaceViewModel.markRecentlyLeft(space.spaceId, user?.userId)
                 onNavigateHome(space.spaceId)
             }
         )

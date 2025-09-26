@@ -1,5 +1,6 @@
 package com.belltree.pomodoroshareapp.home
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,12 +27,26 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.belltree.pomodoroshareapp.R
 import com.belltree.pomodoroshareapp.domain.models.SpaceState
 import com.belltree.pomodoroshareapp.ui.theme.PomodoroAppColors
 import java.text.SimpleDateFormat
@@ -44,10 +59,14 @@ import java.util.Locale
 @Composable
 fun HomeRow(
     space: Space,
+    homeViewModel: HomeViewModel,
     modifier: Modifier = Modifier,
     onSpaceClick: (String) -> Unit,
     highlight: Boolean = false
 ) {
+    var avatarUrl by remember { mutableStateOf<String?>(null) }
+
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -62,6 +81,29 @@ fun HomeRow(
                 .background(if (highlight) Color(0xFFFFF4E5) else Color(0xFFF3F3F3))//指定しないと自動で色が割り当てられる
                 .padding(16.dp)
         ) {
+            var derivedState by remember { mutableStateOf(space.spaceState) }
+            LaunchedEffect(space.startTime, space.sessionCount) {
+                val workDuration = 25 * 60 * 1000L
+                val breakDuration = 5 * 60 * 1000L
+                val cycleLength = workDuration + breakDuration
+                while (true) {
+                    val now = System.currentTimeMillis()
+                    val timeUntilStart = space.startTime - now
+                    if (timeUntilStart > 0) {
+                        derivedState = SpaceState.WAITING
+                    } else {
+                        val elapsed = (now - space.startTime).coerceAtLeast(0L)
+                        val currentCycle = (elapsed / cycleLength).toInt()
+                        if (currentCycle >= space.sessionCount) {
+                            derivedState = SpaceState.FINISHED
+                        } else {
+                            val cyclePosition = elapsed % cycleLength
+                            derivedState = if (cyclePosition < workDuration) SpaceState.WORKING else SpaceState.BREAK
+                        }
+                    }
+                    delay(1000)
+                }
+            }
             SpaceContent(content = space.spaceName)
             Divider(
                 modifier = Modifier.padding(vertical = 8.dp),
@@ -81,7 +123,7 @@ fun HomeRow(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    StatusDot(spaceState = space.spaceState)
+                    StatusDot(spaceState = derivedState)
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "${space.currentSessionCount}/${space.sessionCount} セッション",
@@ -107,21 +149,43 @@ fun HomeRow(
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        repeat(minOf(3, space.participantsId.size)) {
+                        space.participantsId.forEach { participantId ->
+                            LaunchedEffect(participantId, homeViewModel) {
+                                if (participantId.isNotBlank()) {
+                                    val user = homeViewModel.getUserById(participantId)
+                                    avatarUrl = user?.photoUrl
+                                } else {
+                                    avatarUrl = ""
+                                }
+                            }
                             Box(
                                 modifier = Modifier
                                     .size(32.dp)
                                     .clip(CircleShape)
                                     .background(Color(0xFF9C9C9C))
                             ) {
-                                Icon(
-                                    imageVector = Icons.Filled.People,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier
-                                        .size(16.dp)
-                                        .align(Alignment.Center)
-                                )
+                                if (participantId == "") {
+                                    Image(
+                                        painter = painterResource(R.drawable.generic_avatar),
+                                        contentDescription = "デフォルトアバター",
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .clip(CircleShape)
+                                    )
+                                } else {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(avatarUrl)
+                                            .crossfade(true)
+                                            .build(),
+                                        contentDescription = "ユーザーアバター",
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .clip(CircleShape),
+                                        error = painterResource(R.drawable.generic_avatar)
+                                    )
+                                }
+                                }
                             }
                         }
                     }
@@ -130,7 +194,7 @@ fun HomeRow(
 //            SpaceFooter(createdAt = space.createdAt)
         }
     }
-}
+
 
 @Composable
 private fun SpaceOwnerName(ownerName: String) {
@@ -185,31 +249,6 @@ private fun Long.toDateTimeString(): String {
     }
 }
 
-//@Composable
-//private fun SpaceFooter(createdAt: Long) {
-//    Row(
-//        modifier = Modifier.fillMaxWidth(),
-//        horizontalArrangement = Arrangement.Start
-//    ) {
-//        Text(
-//            text = formatEpochMillis(createdAt),
-//            style = MaterialTheme.typography.bodySmall,
-//            color = MaterialTheme.colorScheme.onSurfaceVariant
-//        )
-//    }
-//}
 
-
-//zoneIdは仮
-//private fun formatEpochMillis(millis: Long, zoneId: ZoneId = ZoneId.of("Asia/Tokyo")): String {
-//    if (millis <= 0L) return "-"
-//    return try {
-//        val instant = Instant.ofEpochMilli(millis)
-//        val local = instant.atZone(zoneId).toLocalDateTime()
-//        local.format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm"))
-//    } catch (e: Exception) {
-//        millis.toString()
-//    }
-//}
 
 

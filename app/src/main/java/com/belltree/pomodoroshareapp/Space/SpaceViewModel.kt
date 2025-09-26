@@ -128,6 +128,15 @@ constructor(
         }
     }
 
+    fun removeMyUserInfoFromSpace(spaceId: String, userId: String){
+        viewModelScope.launch {
+            spaceRepository.removeMyUserInfoFromSpace(
+                spaceId = spaceId,
+                userId = userId
+            )
+        }
+    }
+
     fun fetchUserNames(userIds: List<String>) {
         viewModelScope.launch {
             val names =
@@ -209,9 +218,21 @@ constructor(
                             _isRunning.value = false
                             _progress.value = 0f
                             _remainingTimeMillis.value = 0L
+                            // Persist FINISHED state before breaking (owner only)
+                            if (space.ownerId == userId) {
+                                val updates = mapOf(
+                                    "spaceState" to SpaceState.FINISHED.name,
+                                    "currentSessionCount" to _currentSessionCount.value,
+                                    "lastUpdated" to System.currentTimeMillis()
+                                )
+                                viewModelScope.launch {
+                                    spaceRepository.updateSpace(space.spaceId, updates)
+                                }
+                            }
                             stopTimer()
                             break
                         }
+                        
                         val cyclePosition = elapsed % cycleLength
                         // 作業時間中の処理
                         if (cyclePosition < workDuration) {
@@ -277,6 +298,20 @@ constructor(
                                     updateRewardState(newPoints)
                                 }
                                 Log.d("hoge", "Record updated")
+                            }
+                        }
+                    }
+
+                    // Firestore 反映（オーナーのみ、状態遷移時）
+                    if (previousState != _spaceState.value) {
+                        if (space.ownerId == userId) {
+                            val updates = mapOf(
+                                "spaceState" to _spaceState.value.name,
+                                "currentSessionCount" to _currentSessionCount.value,
+                                "lastUpdated" to System.currentTimeMillis()
+                            )
+                            viewModelScope.launch {
+                                spaceRepository.updateSpace(space.spaceId, updates)
                             }
                         }
                     }
@@ -384,10 +419,11 @@ constructor(
         setUserSpaceState(UserSpaceState.Exit)
     }
 
-    fun markRecentlyLeft(spaceId: String) {
+    fun markRecentlyLeft(spaceId: String, userId: String?) {
         Log.w("SpaceViewModel", "markRecentlyLeft called with id=$spaceId")
         // 明示的に退出したため、状態を Exit に設定
         setUserSpaceState(UserSpaceState.Exit)
+        removeMyUserInfoFromSpace(spaceId, userId?: "")
         recentlyLeftSpaceManager.mark(spaceId)
     }
 

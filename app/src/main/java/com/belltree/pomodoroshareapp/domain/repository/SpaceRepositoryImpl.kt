@@ -27,6 +27,20 @@ class SpaceRepositoryImpl @Inject constructor(
         return snapshot.documents.mapNotNull { it.toSpace() }
     }
 
+    override fun observeUnfinishedSpaces(): Flow<List<Space>> = callbackFlow {
+        val registration = db.collection("spaces")
+            .whereNotEqualTo("spaceState", SpaceState.FINISHED)
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    close(e)
+                    return@addSnapshotListener
+                }
+                val list = snapshot?.documents?.mapNotNull { it.toSpace() } ?: emptyList()
+                trySend(list)
+            }
+        awaitClose { registration.remove() }
+    }
+
     // 新しい部屋を作成する(MakeSpaceViewModelで使用)
     override fun createSpace(space: Space) {
         db.collection("spaces").add(space)
@@ -49,6 +63,17 @@ class SpaceRepositoryImpl @Inject constructor(
     override fun addMyUserInfoToSpace(spaceId: String, userId: String) {
         val spaceRef = db.collection("spaces").document(spaceId)
         spaceRef.update("participantsId", FieldValue.arrayUnion(userId))
+    }
+
+    // 部屋画面遷移時に自分のユーザーIDを参加者リストから削除する(SpaceViewModelで使用)
+    override fun removeMyUserInfoFromSpace(spaceId: String, userId: String) {
+        val spaceRef = db.collection("spaces").document(spaceId)
+        spaceRef.update("participantsId", FieldValue.arrayRemove(userId))
+    }
+
+    override fun updateSpace(spaceId: String, updates: Map<String, Any?>) {
+        val spaceRef = db.collection("spaces").document(spaceId)
+        spaceRef.update(updates)
     }
 
     // 部屋に参加中のユーザーのIDリストを監視する(SpaceViewModelで使用)
@@ -90,6 +115,7 @@ class SpaceRepositoryImpl @Inject constructor(
 
         val startTime: Long = (getField<Number>("startTime")?.toLong()) ?: 0L
         val sessionCount: Int = (getField<Number>("sessionCount")?.toInt()) ?: 0
+        val currentSessionCount: Int = (getField<Number>("currentSessionCount")?.toInt()) ?: 0
 
         // Accept both "participantsId" (current) and "participantId" (legacy)
         val participants: List<*>? = getField("participantsId") ?: getField("participantId")
@@ -112,6 +138,7 @@ class SpaceRepositoryImpl @Inject constructor(
             timerState = timerState,
             startTime = startTime,
             sessionCount = sessionCount,
+            currentSessionCount = currentSessionCount,
             participantsId = participantsId,
             createdAt = createdAt,
             lastUpdated = lastUpdated,

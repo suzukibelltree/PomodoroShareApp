@@ -20,7 +20,7 @@ enum class SpaceState {
     WAITING,
     WORKING,
     BREAK,
-    FINISHED
+    FINISHED,
 }
 
 enum class TimerState {
