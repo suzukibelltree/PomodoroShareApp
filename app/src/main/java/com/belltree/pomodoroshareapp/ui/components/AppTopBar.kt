@@ -35,6 +35,7 @@ fun AppTopBar(
     avatarUrl: String? = null,
     onAvatarClick: (() -> Unit)? = null,
     searchBar: (@Composable () -> Unit)? = null,
+    topbarColor: Color = Color.White
 ) {
     CenterAlignedTopAppBar(
         title = {
@@ -104,8 +105,8 @@ fun AppTopBar(
             }
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = Color.White,
-            scrolledContainerColor = Color.White
+            containerColor = topbarColor,
+            scrolledContainerColor = topbarColor
         )//デフォルトカラーを白
     )
 }

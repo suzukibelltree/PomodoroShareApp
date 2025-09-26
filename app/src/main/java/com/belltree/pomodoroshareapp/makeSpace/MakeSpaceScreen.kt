@@ -62,6 +62,7 @@ import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.TimePicker
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.rememberCoroutineScope
+import com.belltree.pomodoroshareapp.ui.theme.PomodoroAppColors
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -102,15 +103,17 @@ fun MakeSpaceScreen(
     Scaffold(
         topBar = {
             AppTopBar(
-                title = "MakeSpace",
+                title = "部屋の作成",
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
                 onNavigationClick = onNavigateHome,
+                topbarColor = PomodoroAppColors.LightGray
             )
         }
     ) { innerPadding ->
         Column(
             modifier = modifier
                 .fillMaxSize()
+                .background(Color.White)
                 .padding(innerPadding)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -438,7 +441,7 @@ fun MakeSpaceScreen(
                         .size(14.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("非公開")
+                Text("部屋を限定公開にする")
                 Spacer(modifier = Modifier.weight(1f))
                 Switch(
                     checked = isPrivate,
