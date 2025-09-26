@@ -1,5 +1,6 @@
 package com.belltree.pomodoroshareapp.home
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -68,6 +69,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+@SuppressLint("SuspiciousIndentation")
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
@@ -204,6 +206,7 @@ fun HomeScreen(
                         item("pinned-${'$'}{topSpace.spaceId}") {
                             HomeRow(
                                 space = topSpace,
+								homeViewModel = homeViewModel,
                                 onSpaceClick = { id -> onNavigateSpace(id) },
                                 modifier = Modifier.fillMaxWidth(),
                                 highlight = topSpace.spaceId == recentlyLeftSpaceId
@@ -216,6 +219,7 @@ fun HomeScreen(
                     items(rest) { item ->
 						HomeRow(
 							space = item,
+							homeViewModel = homeViewModel,
 							onSpaceClick = { id -> onNavigateSpace(id) },
 							modifier = Modifier.fillMaxWidth(),
 							highlight = item.spaceId == recentlyLeftSpaceId
@@ -252,7 +256,8 @@ fun HomeScreen(
 						showSpaceDialog = false
 						onNavigateSpace(id)
 					},
-					space = sp
+					space = sp,
+					homeViewModel = homeViewModel
 				)
 			}
 		}

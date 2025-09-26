@@ -74,6 +74,10 @@ class HomeViewModel @Inject constructor(
         )
     }
 
+    suspend fun getUserById(userId: String): User?{
+        return userRepository.getUserById(userId)
+    }
+
     fun loadOwner() {
         viewModelScope.launch {
             val u = userRepository.getUserById(userId)

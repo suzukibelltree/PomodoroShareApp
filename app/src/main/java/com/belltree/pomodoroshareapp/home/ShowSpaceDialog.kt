@@ -30,7 +30,8 @@ import com.belltree.pomodoroshareapp.ui.theme.PomodoroAppColors
 fun ShowSpaceDialog(
     onDismiss: () -> Unit = {},
     onConfirm: (String) -> Unit = {},
-    space: Space
+    space: Space,
+    homeViewModel: HomeViewModel
 ) {
     Dialog(onDismissRequest = { onDismiss() }) {
         Box(
@@ -48,6 +49,7 @@ fun ShowSpaceDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 HomeRow(
                     space = space,
+                    homeViewModel = homeViewModel,
                     onSpaceClick = {/*クリックしても反応しない*/},
                     modifier = Modifier.fillMaxWidth(),
                 )
