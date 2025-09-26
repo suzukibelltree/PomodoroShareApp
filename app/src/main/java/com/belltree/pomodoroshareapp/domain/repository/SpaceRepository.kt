@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface SpaceRepository {
     suspend fun getUnfinishedSpaces(): List<Space>
+    fun observeUnfinishedSpaces(): Flow<List<Space>>
     fun createSpace(space: Space)
     suspend fun createSpaceReturnId(space: Space): String
     suspend fun getSpaceById(spaceId: String): Space?

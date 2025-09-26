@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -59,12 +60,21 @@ class HomeViewModel @Inject constructor(
 
     val recentlyLeftSpaceId: StateFlow<String?> = recentlyLeftSpaceManager.recentlyLeftSpaceId
 
+    private var spacesObserverJob: Job? = null
+
     fun load() {
         if (_isLoading.value) return
         viewModelScope.launch {
             _isLoading.value = true
             _spaces.value = spaceRepository.getUnfinishedSpaces()
             _isLoading.value = false
+        }
+        // Start/Restart realtime observation in separate job (non-blocking)
+        spacesObserverJob?.cancel()
+        spacesObserverJob = viewModelScope.launch {
+            spaceRepository.observeUnfinishedSpaces().collect { list ->
+                _spaces.value = list
+            }
         }
     }
 

@@ -36,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -80,6 +81,29 @@ fun HomeRow(
                 .background(if (highlight) Color(0xFFFFF4E5) else Color(0xFFF3F3F3))//指定しないと自動で色が割り当てられる
                 .padding(16.dp)
         ) {
+            var derivedState by remember { mutableStateOf(space.spaceState) }
+            LaunchedEffect(space.startTime, space.sessionCount) {
+                val workDuration = 25 * 60 * 1000L
+                val breakDuration = 5 * 60 * 1000L
+                val cycleLength = workDuration + breakDuration
+                while (true) {
+                    val now = System.currentTimeMillis()
+                    val timeUntilStart = space.startTime - now
+                    if (timeUntilStart > 0) {
+                        derivedState = SpaceState.WAITING
+                    } else {
+                        val elapsed = (now - space.startTime).coerceAtLeast(0L)
+                        val currentCycle = (elapsed / cycleLength).toInt()
+                        if (currentCycle >= space.sessionCount) {
+                            derivedState = SpaceState.FINISHED
+                        } else {
+                            val cyclePosition = elapsed % cycleLength
+                            derivedState = if (cyclePosition < workDuration) SpaceState.WORKING else SpaceState.BREAK
+                        }
+                    }
+                    delay(1000)
+                }
+            }
             SpaceContent(content = space.spaceName)
             Divider(
                 modifier = Modifier.padding(vertical = 8.dp),
@@ -99,7 +123,7 @@ fun HomeRow(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    StatusDot(spaceState = space.spaceState)
+                    StatusDot(spaceState = derivedState)
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "${space.currentSessionCount}/${space.sessionCount} セッション",
