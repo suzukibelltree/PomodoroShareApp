@@ -9,5 +9,6 @@ interface SpaceRepository {
     suspend fun createSpaceReturnId(space: Space): String
     suspend fun getSpaceById(spaceId: String): Space?
     fun addMyUserInfoToSpace(spaceId: String, userId: String)
+    fun removeMyUserInfoFromSpace(spaceId: String, userId: String)
     fun observeSpace(spaceId: String): Flow<Space>
 }

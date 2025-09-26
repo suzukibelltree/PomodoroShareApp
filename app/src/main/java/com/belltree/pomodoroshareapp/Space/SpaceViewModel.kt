@@ -127,6 +127,15 @@ constructor(
         }
     }
 
+    fun removeMyUserInfoFromSpace(spaceId: String, userId: String){
+        viewModelScope.launch {
+            spaceRepository.removeMyUserInfoFromSpace(
+                spaceId = spaceId,
+                userId = userId
+            )
+        }
+    }
+
     fun fetchUserNames(userIds: List<String>) {
         viewModelScope.launch {
             val names =
@@ -375,10 +384,11 @@ constructor(
         setUserSpaceState(UserSpaceState.Exit)
     }
 
-    fun markRecentlyLeft(spaceId: String) {
+    fun markRecentlyLeft(spaceId: String, userId: String?) {
         Log.w("SpaceViewModel", "markRecentlyLeft called with id=$spaceId")
         // 明示的に退出したため、状態を Exit に設定
         setUserSpaceState(UserSpaceState.Exit)
+        removeMyUserInfoFromSpace(spaceId, userId?: "")
         recentlyLeftSpaceManager.mark(spaceId)
     }
 }

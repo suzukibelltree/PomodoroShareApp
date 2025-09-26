@@ -51,6 +51,12 @@ class SpaceRepositoryImpl @Inject constructor(
         spaceRef.update("participantsId", FieldValue.arrayUnion(userId))
     }
 
+    // 部屋画面遷移時に自分のユーザーIDを参加者リストから削除する(SpaceViewModelで使用)
+    override fun removeMyUserInfoFromSpace(spaceId: String, userId: String) {
+        val spaceRef = db.collection("spaces").document(spaceId)
+        spaceRef.update("participantsId", FieldValue.arrayRemove(userId))
+    }
+
     // 部屋に参加中のユーザーのIDリストを監視する(SpaceViewModelで使用)
     override fun observeSpace(spaceId: String): Flow<Space> = callbackFlow<Space> {
         val listener = db.collection("spaces")
