@@ -8,6 +8,7 @@ import com.belltree.pomodoroshareapp.domain.models.Comment
 import com.belltree.pomodoroshareapp.domain.models.DailyStudySummary
 import com.belltree.pomodoroshareapp.domain.models.Record
 import com.belltree.pomodoroshareapp.domain.repository.RecordRepository
+import com.belltree.pomodoroshareapp.domain.repository.UserRepository
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,6 +30,7 @@ import java.util.TimeZone
 @HiltViewModel
 class RecordViewModel @Inject constructor(
     private val recordRepository: RecordRepository,
+    private val userRepository: UserRepository,
     private val auth: FirebaseAuth
 ) : ViewModel() {
     val userId: String = auth.currentUser?.uid ?: "Unknown"
@@ -50,6 +52,9 @@ class RecordViewModel @Inject constructor(
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _goalStudyTime = MutableStateFlow(0L)
+    val goalStudyTime: StateFlow<Long> = _goalStudyTime.asStateFlow()
 
     private val apiKey = BuildConfig.API_KEY
     private val generativeModel = GenerativeModel(
@@ -237,5 +242,11 @@ class RecordViewModel @Inject constructor(
         }
     }
 
+    fun getUserGoalStudyTimeById(userId: String) {
+        viewModelScope.launch {
+            val user = userRepository.getUserById(userId)
+            _goalStudyTime.value = user?.goalStudyTime ?: 0
+        }
+    }
 
 }

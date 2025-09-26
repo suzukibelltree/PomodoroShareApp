@@ -40,18 +40,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.belltree.pomodoroshareapp.R // 确保R文件路径正确
+import com.belltree.pomodoroshareapp.R
 import com.belltree.pomodoroshareapp.domain.models.Space
 import com.belltree.pomodoroshareapp.domain.models.User
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
@@ -59,7 +55,6 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import androidx.compose.material3.AlertDialogDefaults.containerColor
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.PaddingValues
@@ -205,7 +200,6 @@ fun MakeSpaceScreen(
                         style = TextStyle(
                             fontSize = 14.sp,
                             lineHeight = 20.sp,
-//                            fontFamily = FontFamily(Font(R.font.roboto)),
                             fontWeight = FontWeight(500),
                             color = Color(0xF2FFFFFF),
                             letterSpacing = 0.1.sp,
@@ -321,7 +315,6 @@ fun MakeSpaceScreen(
                         style = TextStyle(
                             fontSize = 14.sp,
                             lineHeight = 20.sp,
-//                            fontFamily = FontFamily(Font(R.font.roboto)),
                             fontWeight = FontWeight(500),
                             color = Color(0xF2FFFFFF),
                             letterSpacing = 0.1.sp,
