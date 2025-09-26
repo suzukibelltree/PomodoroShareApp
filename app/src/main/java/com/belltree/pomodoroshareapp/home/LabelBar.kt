@@ -53,32 +53,35 @@ fun LabelBar(
             )
         }
         SpaceState.entries.forEach { state ->
-            item{
-                FilterChip(
-                    selected = selectedLabel == state,
-                    onClick = { onSelectedLabelChange(state) },
-                    label = {
-                        Text(
-                            state.name.lowercase().replaceFirstChar { it.uppercase() },
-                            color = when(state){
-                                SpaceState.WAITING -> PomodoroAppColors.SkyBlue
-                                SpaceState.WORKING -> PomodoroAppColors.CoralOrange
-                                SpaceState.BREAK -> PomodoroAppColors.LimeGreen
-                                SpaceState.FINISHED -> PomodoroAppColors.TurquoiseBlue
-                            }
-                        )
-                    },
-                    border = FilterChipDefaults.filterChipBorder(
-                        enabled = true,
+            if(state != SpaceState.FINISHED){
+                item{
+                    FilterChip(
                         selected = selectedLabel == state,
-                        borderColor = Color(0xFFC4C4C4),
-                        selectedBorderColor = Color(0xFFC4C4C4)
-                    ),
-                    colors = FilterChipDefaults.filterChipColors(
-                        containerColor = Color.Transparent,
-                        selectedContainerColor = Color(0xFFD9D9D9)
+                        onClick = { onSelectedLabelChange(state) },
+                        label = {
+                            Text(
+                                state.name.lowercase().replaceFirstChar { it.uppercase() },
+                                color = when(state){
+                                    SpaceState.WAITING -> PomodoroAppColors.SkyBlue
+                                    SpaceState.WORKING -> PomodoroAppColors.CoralOrange
+                                    SpaceState.BREAK -> PomodoroAppColors.LimeGreen
+                                    SpaceState.FINISHED -> PomodoroAppColors.DarkGray
+
+                                }
+                            )
+                        },
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = selectedLabel == state,
+                            borderColor = Color(0xFFC4C4C4),
+                            selectedBorderColor = Color(0xFFC4C4C4)
+                        ),
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = Color.Transparent,
+                            selectedContainerColor = Color(0xFFD9D9D9)
+                        )
                     )
-                )
+                }
             }
         }
     }
