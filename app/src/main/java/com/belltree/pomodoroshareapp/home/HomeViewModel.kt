@@ -74,6 +74,31 @@ class HomeViewModel @Inject constructor(
         spacesObserverJob = viewModelScope.launch {
             spaceRepository.observeUnfinishedSpaces().collect { list ->
                 _spaces.value = list
+                // BREAK -> FINISHED を導出して反映（ホスト不在/参加者ゼロでも完了させる）
+                val workDuration = 25 * 60 * 1000L
+                val breakDuration = 5 * 60 * 1000L
+                val cycleLength = workDuration + breakDuration
+                val now = System.currentTimeMillis()
+                list.forEach { sp ->
+                    val timeUntilStart = sp.startTime - now
+                    if (timeUntilStart <= 0) {
+                        val elapsed = (now - sp.startTime).coerceAtLeast(0L)
+                        val currentCycle = (elapsed / cycleLength).toInt()
+                        val shouldBeFinished = currentCycle >= sp.sessionCount
+                        if (shouldBeFinished && sp.spaceState != com.belltree.pomodoroshareapp.domain.models.SpaceState.FINISHED) {
+                            viewModelScope.launch {
+                                spaceRepository.updateSpace(
+                                    sp.spaceId,
+                                    mapOf(
+                                        "spaceState" to com.belltree.pomodoroshareapp.domain.models.SpaceState.FINISHED.name,
+                                        "currentSessionCount" to sp.sessionCount,
+                                        "lastUpdated" to System.currentTimeMillis()
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }

@@ -218,9 +218,21 @@ constructor(
                             _isRunning.value = false
                             _progress.value = 0f
                             _remainingTimeMillis.value = 0L
+                            // Persist FINISHED state before breaking (owner only)
+                            if (space.ownerId == userId) {
+                                val updates = mapOf(
+                                    "spaceState" to SpaceState.FINISHED.name,
+                                    "currentSessionCount" to _currentSessionCount.value,
+                                    "lastUpdated" to System.currentTimeMillis()
+                                )
+                                viewModelScope.launch {
+                                    spaceRepository.updateSpace(space.spaceId, updates)
+                                }
+                            }
                             stopTimer()
                             break
                         }
+                        
                         val cyclePosition = elapsed % cycleLength
                         // 作業時間中の処理
                         if (cyclePosition < workDuration) {
