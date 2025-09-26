@@ -3,8 +3,6 @@ package com.belltree.pomodoroshareapp.ui.components
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -17,11 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
+import com.belltree.pomodoroshareapp.home.UserIconWithFrame
 import com.belltree.pomodoroshareapp.ui.theme.PomodoroAppColors
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,6 +29,7 @@ fun AppTopBar(
     rightActionIcons: List<Pair<ImageVector, () -> Unit>> = emptyList(),
     additionalNavigationIcons: List<Pair<ImageVector, () -> Unit>> = emptyList(),
     avatarUrl: String? = null,
+    userRewardState: String? = null,
     onAvatarClick: (() -> Unit)? = null,
     searchBar: (@Composable () -> Unit)? = null,
 ) {
@@ -72,16 +69,23 @@ fun AppTopBar(
         actions = {
             if (!avatarUrl.isNullOrBlank()) {
                 IconButton(onClick = { onAvatarClick?.invoke() }) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(avatarUrl)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = "Avatar",
+                    UserIconWithFrame(
+                        userImageURL = avatarUrl,
+                        rewardState = userRewardState.toString(),
                         modifier = Modifier
                             .size(32.dp)
                             .clip(CircleShape)
                     )
+//                    AsyncImage(
+//                        model = ImageRequest.Builder(LocalContext.current)
+//                            .data(avatarUrl)
+//                            .crossfade(true)
+//                            .build(),
+//                        contentDescription = "Avatar",
+//                        modifier = Modifier
+//                            .size(32.dp)
+//                            .clip(CircleShape)
+//                    )
                 }
             } else if (title == "ルーム一覧") {//ホーム画面のみデフォルトアイコンを表示
                 IconButton(
@@ -90,10 +94,17 @@ fun AppTopBar(
                         .clip(CircleShape),
                     onClick = { onAvatarClick?.invoke() }
                 ) {
-                    Icon(
-                        Icons.Filled.Person,
-                        contentDescription = "Avatar",
-                        tint = PomodoroAppColors.DarkGray
+//                    Icon(
+//                        Icons.Filled.Person,
+//                        contentDescription = "Avatar",
+//                        tint = PomodoroAppColors.DarkGray
+//                    )
+                    UserIconWithFrame(
+                        userImageURL = null,
+                        rewardState = userRewardState.toString(),
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
                     )
                 }
             }

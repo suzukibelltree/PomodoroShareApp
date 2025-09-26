@@ -16,7 +16,7 @@ data class User(
     */
     val totalStudyPoint: Long = 0,
     //フレームの種類
-    val rewardState: RewardState = RewardState.Bronze,
+    val rewardState: String = RewardState.Bronze.toString(),
     val userSpaceState: UserSpaceState = UserSpaceState.Exit
 )
 
@@ -26,6 +26,7 @@ enum class RewardState {
     Gold,
     Diamond,
 }
+
 enum class UserSpaceState {
     Use,
     Exit,

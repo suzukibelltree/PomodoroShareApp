@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.belltree.pomodoroshareapp.domain.models.Comment
 import com.belltree.pomodoroshareapp.domain.models.Record
+import com.belltree.pomodoroshareapp.domain.models.RewardState
 import com.belltree.pomodoroshareapp.domain.models.Space
 import com.belltree.pomodoroshareapp.domain.models.SpaceState
 import com.belltree.pomodoroshareapp.domain.models.User
@@ -13,8 +14,8 @@ import com.belltree.pomodoroshareapp.domain.repository.CommentRepository
 import com.belltree.pomodoroshareapp.domain.repository.RecordRepository
 import com.belltree.pomodoroshareapp.domain.repository.SpaceRepository
 import com.belltree.pomodoroshareapp.domain.repository.UserRepository
-import com.belltree.pomodoroshareapp.notification.NotificationHelper
 import com.belltree.pomodoroshareapp.home.RecentlyLeftSpaceManager
+import com.belltree.pomodoroshareapp.notification.NotificationHelper
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
@@ -169,8 +170,8 @@ constructor(
     }
 
     //ユーザー情報を更新
-    fun updateUserToFirebase(spaceId: String, updates: Map<String, Any?>){
-        viewModelScope.launch{
+    fun updateUserToFirebase(spaceId: String, updates: Map<String, Any?>) {
+        viewModelScope.launch {
             userRepository.updateUserToFirestore(spaceId, updates)
         }
     }
@@ -252,7 +253,11 @@ constructor(
                                 viewModelScope.launch {
                                     val me = userRepository.getUserById(userId)
                                     val newPoints = (me?.totalStudyPoint ?: 0) + 10
-                                    userRepository.updateUserToFirestore(userId, mapOf("totalStudyPoint" to newPoints))
+                                    userRepository.updateUserToFirestore(
+                                        userId,
+                                        mapOf("totalStudyPoint" to newPoints)
+                                    )
+                                    updateRewardState(newPoints)
                                 }
                             }
                         } else {
@@ -265,7 +270,11 @@ constructor(
                                 viewModelScope.launch {
                                     val me = userRepository.getUserById(userId)
                                     val newPoints = (me?.totalStudyPoint ?: 0) + 10
-                                    userRepository.updateUserToFirestore(userId, mapOf("totalStudyPoint" to newPoints))
+                                    userRepository.updateUserToFirestore(
+                                        userId,
+                                        mapOf("totalStudyPoint" to newPoints)
+                                    )
+                                    updateRewardState(newPoints)
                                 }
                                 Log.d("hoge", "Record updated")
                             }
@@ -380,5 +389,21 @@ constructor(
         // 明示的に退出したため、状態を Exit に設定
         setUserSpaceState(UserSpaceState.Exit)
         recentlyLeftSpaceManager.mark(spaceId)
+    }
+
+    fun updateRewardState(totalStudyPoint: Long) {
+        viewModelScope.launch {
+            val user = userRepository.getUserById(userId)
+            val currentState = user?.rewardState ?: return@launch
+            val newState = when {
+                totalStudyPoint >= 150 -> RewardState.Diamond.toString()
+                totalStudyPoint >= 100 -> RewardState.Gold.toString()
+                totalStudyPoint >= 50 -> RewardState.Sliver.toString()
+                else -> RewardState.Bronze.toString()
+            }
+            if (newState != currentState) {
+                userRepository.updateUserToFirestore(userId, mapOf("rewardState" to newState))
+            }
+        }
     }
 }
