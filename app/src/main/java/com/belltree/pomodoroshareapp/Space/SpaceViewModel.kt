@@ -281,6 +281,20 @@ constructor(
                         }
                     }
 
+                    // Firestore 反映（オーナーのみ、状態遷移時）
+                    if (previousState != _spaceState.value) {
+                        if (space.ownerId == userId) {
+                            val updates = mapOf(
+                                "spaceState" to _spaceState.value.name,
+                                "currentSessionCount" to _currentSessionCount.value,
+                                "lastUpdated" to System.currentTimeMillis()
+                            )
+                            viewModelScope.launch {
+                                spaceRepository.updateSpace(space.spaceId, updates)
+                            }
+                        }
+                    }
+
                     previousState = _spaceState.value
                     delay(1000) // 1秒ごとに更新する
                 }

@@ -57,6 +57,11 @@ class SpaceRepositoryImpl @Inject constructor(
         spaceRef.update("participantsId", FieldValue.arrayRemove(userId))
     }
 
+    override fun updateSpace(spaceId: String, updates: Map<String, Any?>) {
+        val spaceRef = db.collection("spaces").document(spaceId)
+        spaceRef.update(updates)
+    }
+
     // 部屋に参加中のユーザーのIDリストを監視する(SpaceViewModelで使用)
     override fun observeSpace(spaceId: String): Flow<Space> = callbackFlow<Space> {
         val listener = db.collection("spaces")

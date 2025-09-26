@@ -11,4 +11,5 @@ interface SpaceRepository {
     fun addMyUserInfoToSpace(spaceId: String, userId: String)
     fun removeMyUserInfoFromSpace(spaceId: String, userId: String)
     fun observeSpace(spaceId: String): Flow<Space>
+    fun updateSpace(spaceId: String, updates: Map<String, Any?>)
 }
