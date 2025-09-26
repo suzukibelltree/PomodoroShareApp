@@ -71,6 +71,7 @@ object NoonAlarmScheduler {
         return PendingIntent.getBroadcast(context, REQUEST_CODE_NOON, intent, flags)
     }
 
+    //何時に通知が来るか指定している
     private fun nextNoonInMillis(
     ): Long {
         val cal = Calendar.getInstance(

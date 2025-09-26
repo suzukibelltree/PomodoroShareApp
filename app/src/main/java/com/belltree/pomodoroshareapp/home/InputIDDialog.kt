@@ -75,6 +75,7 @@ fun InputIDDialog(
                 LaunchedEffect(Unit) {
                     history = store.historyFlow.first()
                 }
+                //履歴を出すためのテキストフィールド
                 AndroidView(
                     modifier = modifier
                         .fillMaxWidth()
@@ -85,6 +86,7 @@ fun InputIDDialog(
                             setSingleLine(true)
                             imeOptions = EditorInfo.IME_ACTION_DONE
                             threshold = 1
+                            //履歴のスタイル
                             val adapter = ArrayAdapter(ctx, android.R.layout.simple_dropdown_item_1line, mutableListOf<String>())
                             adapter.addAll(history)
                             setAdapter(adapter)
