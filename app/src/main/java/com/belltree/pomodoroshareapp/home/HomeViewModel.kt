@@ -3,6 +3,7 @@ package com.belltree.pomodoroshareapp.home
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.belltree.pomodoroshareapp.domain.models.RewardState
 import com.belltree.pomodoroshareapp.domain.models.Space
 import com.belltree.pomodoroshareapp.domain.models.User
 import com.belltree.pomodoroshareapp.domain.repository.SpaceRepository
@@ -28,6 +29,8 @@ class HomeViewModel @Inject constructor(
     val ownerName: StateFlow<String> = _ownerName
     private val _ownerPhotoUrl = MutableStateFlow<String>("")
     val ownerPhotoUrl: StateFlow<String> = _ownerPhotoUrl
+    private val _ownerRewardState = MutableStateFlow<String>(RewardState.Bronze.toString())
+    val ownerRewardState: StateFlow<String> = _ownerRewardState
     private val _spaces = MutableStateFlow<List<Space>>(emptyList())
     val spaces: StateFlow<List<Space>> = _spaces
 
@@ -83,6 +86,7 @@ class HomeViewModel @Inject constructor(
             val u = userRepository.getUserById(userId)
             _ownerName.value = u?.userName ?: "Guest User"
             _ownerPhotoUrl.value = u?.photoUrl ?: ""
+            _ownerRewardState.value = u?.rewardState.toString() ?: RewardState.Bronze.toString()
         }
     }
 
