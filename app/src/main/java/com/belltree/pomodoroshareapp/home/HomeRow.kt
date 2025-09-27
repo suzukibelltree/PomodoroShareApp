@@ -164,7 +164,7 @@ fun HomeRow(
                                     .clip(CircleShape)
                                     .background(Color(0xFF9C9C9C))
                             ) {
-                                if (participantId == "") {
+                                if (avatarUrl == "") {
                                     Image(
                                         painter = painterResource(R.drawable.generic_avatar),
                                         contentDescription = "デフォルトアバター",
