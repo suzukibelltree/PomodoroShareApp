@@ -64,7 +64,7 @@ fun HomeRow(
     onSpaceClick: (String) -> Unit,
     highlight: Boolean = false
 ) {
-    var avatarUrl by remember { mutableStateOf<String?>(null) }
+    
 
 
     Card(
@@ -150,44 +150,12 @@ fun HomeRow(
                         horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         space.participantsId.forEach { participantId ->
-                            LaunchedEffect(participantId, homeViewModel) {
-                                if (participantId.isNotBlank()) {
-                                    val user = homeViewModel.getUserById(participantId)
-                                    avatarUrl = user?.photoUrl
-                                } else {
-                                    avatarUrl = ""
-                                }
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFF9C9C9C))
-                            ) {
-                                if (avatarUrl == "") {
-                                    Image(
-                                        painter = painterResource(R.drawable.generic_avatar),
-                                        contentDescription = "デフォルトアバター",
-                                        modifier = Modifier
-                                            .size(32.dp)
-                                            .clip(CircleShape)
-                                    )
-                                } else {
-                                    AsyncImage(
-                                        model = ImageRequest.Builder(LocalContext.current)
-                                            .data(avatarUrl)
-                                            .crossfade(true)
-                                            .build(),
-                                        contentDescription = "ユーザーアバター",
-                                        modifier = Modifier
-                                            .size(32.dp)
-                                            .clip(CircleShape),
-                                        error = painterResource(R.drawable.generic_avatar)
-                                    )
-                                }
-                                }
-                            }
+                            ParticipantAvatar(
+                                participantId = participantId,
+                                homeViewModel = homeViewModel
+                            )
                         }
+                    }
                     }
                 }
             }
@@ -216,6 +184,52 @@ private fun SpaceContent(content: String) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
+    }
+}
+
+@Composable
+private fun ParticipantAvatar(
+    participantId: String,
+    homeViewModel: HomeViewModel,
+    modifier: Modifier = Modifier
+) {
+    var url by remember(participantId) { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(participantId) {
+        url = if (participantId.isNotBlank()) {
+            homeViewModel.getUserById(participantId)?.photoUrl.orEmpty()
+        } else {
+            ""
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .size(32.dp)
+            .clip(CircleShape)
+            .background(Color(0xFF9C9C9C))
+    ) {
+        if (url.isNullOrEmpty()) {
+            Image(
+                painter = painterResource(R.drawable.generic_avatar),
+                contentDescription = "デフォルトアバター",
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+            )
+        } else {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(url)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = "ユーザーアバター",
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape),
+                error = painterResource(R.drawable.generic_avatar)
+            )
+        }
     }
 }
 
