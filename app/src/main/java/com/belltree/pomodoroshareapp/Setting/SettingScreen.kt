@@ -2,10 +2,17 @@ package com.belltree.pomodoroshareapp.Setting
 
 import android.app.AlarmManager
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import com.canhub.cropper.CropImageContract
+import com.canhub.cropper.CropImageContractOptions
+import com.canhub.cropper.CropImageOptions
+import com.canhub.cropper.CropImageView
 import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -51,7 +59,14 @@ import com.belltree.pomodoroshareapp.ui.components.AppTopBar
 import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.clip
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 
 
 object Variables {
@@ -74,8 +89,23 @@ fun SettingScreen(
 
     val context = LocalContext.current
     var goalStudyTimeInput by remember { mutableStateOf("") }
+    val ownerPhotoUrl by settingViewModel.ownerPhotoUrl.collectAsState()
+    val isUploadingImage by settingViewModel.isUploadingImage.collectAsState()
+    
+    // 画像クロッパー用のランチャー
+    val imageCropperLauncher = rememberLauncherForActivityResult(
+        contract = CropImageContract()
+    ) { result ->
+        if (result.isSuccessful) {
+            result.uriContent?.let { uri ->
+                settingViewModel.uploadProfileImage(uri, context)
+            }
+        }
+    }
+    
     LaunchedEffect(Unit) {
         settingViewModel.loadCurrentUserGoal()
+        settingViewModel.loadOwner()
     }
 
     Scaffold(
@@ -92,6 +122,7 @@ fun SettingScreen(
                 .fillMaxSize()
                 .padding(top = innerPadding.calculateTopPadding() + 48.dp)
         ) {
+
             Image(
                 painter = painterResource(id = R.drawable.rectangle6),
                 contentDescription = "background image",
@@ -104,8 +135,6 @@ fun SettingScreen(
             )
 
 
-
-
             Column(
                 modifier = modifier
                     .fillMaxSize()
@@ -115,7 +144,67 @@ fun SettingScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                Spacer(modifier = Modifier.height(12.dp))
 
+                Box(
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                ) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(ownerPhotoUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Avatar",
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(CircleShape)
+                    )
+                    
+                    if (isUploadingImage) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .size(100.dp)
+                                .align(Alignment.Center),
+                            color = Color(0xFF446E36)
+                        )
+                    }
+                }
+
+                Button(
+                    onClick = { 
+                        // 画像クロッパーを起動（円形クロップ設定）
+                        val cropOptions = CropImageContractOptions(
+                            uri = null,
+                            cropImageOptions = CropImageOptions(
+                                guidelines = CropImageView.Guidelines.ON,
+                                cropShape = CropImageView.CropShape.OVAL, // 円形クロップ
+                                aspectRatioX = 1, // 1:1のアスペクト比
+                                aspectRatioY = 1,
+                                fixAspectRatio = true, // アスペクト比を固定
+                                allowRotation = true, // 回転を許可
+                                allowFlipping = true, // 反転を許可
+                                imageSourceIncludeGallery = true,
+                                imageSourceIncludeCamera = true
+                            )
+                        )
+                        imageCropperLauncher.launch(cropOptions)
+                    },
+                    enabled = !isUploadingImage,
+                    modifier = Modifier
+                        .width(180.dp)
+                        .height(40.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF48B3D3),
+                        disabledContainerColor = Color(0xFFCCCCCC)
+                    )
+                ){
+                    Text(
+                        text = if (isUploadingImage) "アップロード中..." else "画像をアップロード",
+                        fontSize = 14.sp,
+                        color = if (isUploadingImage) Color.Gray else Color.White,
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -127,29 +216,28 @@ fun SettingScreen(
                         .padding(bottom = 24.dp)
                 )
 
-
-                        OutlinedTextField(
-                            value = goalStudyTimeInput,
-                            onValueChange = { newValue ->
-                                if (newValue.all { it.isDigit() } && newValue.length <= 2) {
-                                    goalStudyTimeInput = newValue
-                                }
-                            },
-                            label = { Text("目標時間") },
-                            placeholder = { Text("例：5") },
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF446E36),
-                                unfocusedBorderColor = Color(0xFF446E36),
-                                cursorColor = Color(0xFF446E36),
-                                focusedLabelColor = Color(0xFF263F1F),
-                                unfocusedLabelColor = Color(0xFF263F1F)
-                            ),
-                            modifier = Modifier
-                                .width(300.dp)
-                                .padding(horizontal = 16.dp)
-                        )
+                OutlinedTextField(
+                    value = goalStudyTimeInput,
+                    onValueChange = { newValue ->
+                        if (newValue.all { it.isDigit() } && newValue.length <= 2) {
+                            goalStudyTimeInput = newValue
+                        }
+                    },
+                    label = { Text("目標時間") },
+                    placeholder = { Text("例：5") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF446E36),
+                        unfocusedBorderColor = Color(0xFF446E36),
+                        cursorColor = Color(0xFF446E36),
+                        focusedLabelColor = Color(0xFF263F1F),
+                        unfocusedLabelColor = Color(0xFF263F1F)
+                    ),
+                    modifier = Modifier
+                        .width(300.dp)
+                        .padding(horizontal = 16.dp)
+                )
 
 
                 Spacer(modifier = Modifier.height(36.dp))
@@ -224,7 +312,7 @@ fun SettingScreen(
                 }
 
 
-                Spacer(modifier = Modifier.height(100.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
 
                 Button(
