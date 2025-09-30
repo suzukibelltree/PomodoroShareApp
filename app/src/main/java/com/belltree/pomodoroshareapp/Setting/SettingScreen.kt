@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -71,12 +72,6 @@ import coil.request.ImageRequest
 
 object Variables {
     val StaticLabelLargeLineHeight: TextUnit = 20.sp
-    val StaticBodySmallSize: TextUnit = 12.sp
-    val StaticBodySmallLineHeight: TextUnit = 16.sp
-    val StaticBodySmallTracking: TextUnit = 0.4.sp
-    val StaticBodyLargeSize: TextUnit = 16.sp
-    val StaticBodyLargeLineHeight: TextUnit = 24.sp
-    val StaticBodyLargeTracking: TextUnit = 0.5.sp
 }
 
 @Composable
@@ -120,7 +115,7 @@ fun SettingScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding() + 48.dp)
+                .padding(top = innerPadding.calculateTopPadding() + 12.dp)
         ) {
 
             Image(
@@ -129,7 +124,7 @@ fun SettingScreen(
                 contentScale = ContentScale.FillBounds,
                 modifier = Modifier
                     .width(371.dp)
-                    .height(456.dp)
+                    .height(700.dp)
                     .align(Alignment.TopCenter)
                     .alpha(0.7f) // 这里指定透明度，范围 0f ~ 1f
             )
@@ -213,7 +208,7 @@ fun SettingScreen(
                     fontSize = 16.sp,
                     color = Color(0xFF234121),
                     modifier = Modifier
-                        .padding(bottom = 24.dp)
+                        .padding(bottom = 12.dp)
                 )
 
                 OutlinedTextField(
@@ -238,9 +233,6 @@ fun SettingScreen(
                         .width(300.dp)
                         .padding(horizontal = 16.dp)
                 )
-
-
-                Spacer(modifier = Modifier.height(36.dp))
 
                 Button(
                     onClick = {
@@ -271,8 +263,7 @@ fun SettingScreen(
                     },
                     modifier = Modifier
                         .width(160.dp)
-                        .height(48.dp)
-                        .padding(bottom = 4.dp),
+                        .height(48.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA6C242)),
                     contentPadding = PaddingValues(0.dp)
@@ -288,13 +279,13 @@ fun SettingScreen(
                 }
 
 
-                Spacer(modifier = Modifier.height(36.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
 
 
                 val currentGoal = settingViewModel.goalStudyTime.value
                 if (currentGoal != null) {
-                    androidx.compose.foundation.text.selection.SelectionContainer {
+                    SelectionContainer {
                         Text(
                             text = "目標時間：　${currentGoal}　(h)",
                             style = TextStyle(
@@ -311,9 +302,30 @@ fun SettingScreen(
                     }
                 }
 
+                Text(
+                    text = "勉強するほどたまっていくよ\nたまるほどフレームが豪華になっていくよ！\n毎週土曜日にリセットされるよ",
+                    fontSize = 16.sp,
+                    color = Color(0xFF234121),
+                    modifier = Modifier
+                        .padding(bottom = 12.dp)
+                )
 
-                Spacer(modifier = Modifier.height(20.dp))
-
+                val totalStudyPoint = settingViewModel.totalStudyPoint.value
+                SelectionContainer {
+                    Text(
+                        text = "勉強ポイント：　${totalStudyPoint}　(P)",
+                        style = TextStyle(
+                            fontSize = 24.sp,
+                            lineHeight = Variables.StaticLabelLargeLineHeight,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF234121),
+                            textAlign = TextAlign.Center,
+                        ),
+                        modifier = Modifier
+                            .padding(bottom = 16.dp)
+                            .fillMaxWidth()
+                    )
+                }
 
                 Button(
                     onClick = onSignOut,
