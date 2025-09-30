@@ -5,6 +5,7 @@ import android.net.Uri
 import android.util.Log
 import android.util.Base64
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -38,7 +39,6 @@ class SettingViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val auth: FirebaseAuth,
     private val userRepository: UserRepository,
-    private val supabaseClient: SupabaseClient
 ) : ViewModel(
 ) {
     // DI 未導入のため内部生成（将来 Hilt へ移行予定）
@@ -65,6 +65,9 @@ class SettingViewModel @Inject constructor(
 
     private val _isUploadingImage = MutableStateFlow(false)
     val isUploadingImage: StateFlow<Boolean> = _isUploadingImage
+
+    private val _totalStudyPoint = mutableLongStateOf(0)
+    val totalStudyPoint: State<Long> = _totalStudyPoint
 
     // サインアウトを行う関数
     fun signOut() {
@@ -106,6 +109,7 @@ class SettingViewModel @Inject constructor(
         viewModelScope.launch {
             val u = userRepository.getUserById(userId)
             _ownerPhotoUrl.value = u?.photoUrl ?: ""
+            _totalStudyPoint.longValue = u?.totalStudyPoint ?: 0
         }
     }
 
