@@ -129,4 +129,6 @@ dependencies {
     implementation("com.google.code.gson:gson:2.13.1")
     // Coil for Compose (image loading)
     implementation("io.coil-kt:coil-compose:2.6.0")
+    // Image Cropper
+    implementation(libs.image.cropper)
 }

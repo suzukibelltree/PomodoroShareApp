@@ -7,6 +7,9 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" tools:ignore="ScheduleExactAlarm" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <application
         android:name=".PomodoroShareApplication"
         android:allowBackup="true"
@@ -18,6 +21,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PomodoroShareApp"
         android:enableOnBackInvokedCallback="true">
+        
+        <!-- Google One Tap用のメタデータ -->
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -37,6 +45,11 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+        
+        <!-- Image Cropper Activity -->
+        <activity
+            android:name="com.canhub.cropper.CropImageActivity"
+            android:theme="@style/Base.Theme.AppCompat" />
     </application>
 
 </manifest>
