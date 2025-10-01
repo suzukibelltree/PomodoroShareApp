@@ -5,6 +5,7 @@ PomodoroShareは人と作業し集中力とモチベを上げるタイマーア�
 - 開発期間：2025年8月～2025年9月
 - 開発体制：3人
 - 開発イベント：100 Program(第8期)
+- 発表資料：https://www.canva.com/design/DAGzgTdHsqw/zjFuOpPvQVUcYojLOrOMhw/view?utm_content=DAGzgTdHsqw&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h1dac7ba793
   
 ## 開発経緯 <!-- 完了！ -->
 家で一人で作業や勉強をしようとしても、緊張感がなかったり、周りに誘惑が多かったりしてなかなか集中できないという問題がありました。
