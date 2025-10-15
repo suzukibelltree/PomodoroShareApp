@@ -70,11 +70,14 @@ fun StaticSection(
     startOfWeek: LocalDate,
     endOfWeek: LocalDate,
     userGoalStudyTime: Long = 0L,
+    message: String = ""
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        GeminiAdviceSection()
+        AdviceSection(
+            message = message
+        )
         Text(
             text = "目標学習時間: $userGoalStudyTime 時間",
             modifier = Modifier
@@ -100,7 +103,9 @@ fun StaticSection(
 }
 
 @Composable
-fun GeminiAdviceSection() {
+fun AdviceSection(
+    message: String = ""
+) {
     Box(
         modifier =
             Modifier
@@ -135,7 +140,7 @@ fun GeminiAdviceSection() {
                 colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Text(
-                    text = "Geminiからのアドバイス\nあああああああああああああああああああああああああああああああ",
+                    text = message.ifEmpty { "継続は力なり！今日も頑張りましょう！" },
                     fontSize = 16.sp,
                     modifier = Modifier.padding(16.dp)
                 )
@@ -260,7 +265,7 @@ fun DailyWorkDurationGraph(
 fun MonthlyCumulativeWorkDurationGraph(
     summary: List<DailyStudySummary>,
     month: YearMonth = YearMonth.now(),
-) {     
+) {
     val zone = ZoneId.of("Asia/Tokyo")
     val today = LocalDate.now(zone)
     val startOfMonth = month.atDay(1)

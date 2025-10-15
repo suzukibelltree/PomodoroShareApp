@@ -50,11 +50,13 @@ fun RecordScreen(
     val endOfWeekDate = Instant.ofEpochMilli(endOfWeek).atZone(zone).toLocalDate()
     val monthlySummary by recordViewModel.monthlySummaryForGraph.collectAsState()
     val userGoalStudyTime by recordViewModel.goalStudyTime.collectAsState()
+    val message by recordViewModel.message.collectAsState()
     LaunchedEffect(Unit) {
         recordViewModel.getAllRecords(recordViewModel.userId)
         recordViewModel.getOneWeekRecords()
         recordViewModel.loadMonthlySummary(YearMonth.now())
         recordViewModel.getUserGoalStudyTimeById(recordViewModel.userId)
+        recordViewModel.generateMessage(recordViewModel.userId)
     }
     Scaffold(
         topBar = {
@@ -102,7 +104,8 @@ fun RecordScreen(
                         startOfWeek = startOfWeekDate,
                         endOfWeek = endOfWeekDate,
                         monthlySummary = monthlySummary,
-                        userGoalStudyTime = userGoalStudyTime
+                        userGoalStudyTime = userGoalStudyTime,
+                        message = message,
                     )
                 } else {
                     RecordSection(

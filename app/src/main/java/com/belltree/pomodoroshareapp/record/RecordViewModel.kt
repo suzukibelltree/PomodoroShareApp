@@ -67,7 +67,7 @@ class RecordViewModel @Inject constructor(
     val message: StateFlow<String> = _message.asStateFlow()
 
     // AIによるメッセージを取得(画面遷移時に呼び出す)
-    fun generateMessage(userId: String) {
+    fun generateMessageByGemini(userId: String) {
         _isLoading.value = true
         viewModelScope.launch {
             try {
@@ -78,6 +78,28 @@ class RecordViewModel @Inject constructor(
                     "直近1週間の勉強時間:\n$weeklySummary\nこれを踏まえて、簡潔にアドバイスをください。"
                 val response = generativeModel.generateContent(prompt)
                 _message.value = response.text ?: "No response"
+            } catch (e: Exception) {
+                _message.value = "Error: ${e.message}"
+            }
+        }
+        _isLoading.value = false
+    }
+
+    fun generateMessage(userId: String) {
+        _isLoading.value = true
+        viewModelScope.launch {
+            try {
+                val currentRecords = recordRepository.getCurrentOneWeekRecords(userId)
+                // 1週間の合計勉強時間を計算
+                val weeklyWorkDuration = currentRecords.sumOf { it.durationMinutes } / 60
+
+                _message.value = when (weeklyWorkDuration) {
+                    in 0..2 -> "今週はまだ勉強時間が少なめ。集中のきっかけを作る週にしよう。"
+                    in 3..5 -> "勉強時間が安定してきたね。もう少しで集中習慣が身につくはず！"
+                    in 6..9 -> "集中のリズムができてきた。週10時間を超えると成果が見えやすくなるよ。"
+                    in 10..14 -> "週の勉強時間が10時間突破！集中習慣、完全に定着してるね。"
+                    else -> "15時間超え達成！今の習慣を維持できれば、目標達成は目前。"
+                }
             } catch (e: Exception) {
                 _message.value = "Error: ${e.message}"
             }
