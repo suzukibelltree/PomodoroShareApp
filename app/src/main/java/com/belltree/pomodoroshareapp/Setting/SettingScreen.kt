@@ -140,7 +140,6 @@ fun SettingScreen(
                     .alpha(0.7f) // 这里指定透明度，范围 0f ~ 1f
             )
 
-
             Column(
                 modifier = modifier
                     .fillMaxSize()
