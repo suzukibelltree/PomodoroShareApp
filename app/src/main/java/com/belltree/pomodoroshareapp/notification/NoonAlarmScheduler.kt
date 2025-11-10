@@ -25,7 +25,11 @@ object NoonAlarmScheduler {
                 // Android 12+ では正確なアラームの権限が必要
                 if (alarmManager.canScheduleExactAlarms()) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+                        alarmManager.setAndAllowWhileIdle(
+                            AlarmManager.RTC_WAKEUP,
+                            triggerTime,
+                            pendingIntent
+                        )
                     } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                         alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
                     } else {
@@ -34,13 +38,21 @@ object NoonAlarmScheduler {
                 } else {
                     // 許可がない場合は近似アラームでフォールバック（クラッシュ回避）
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+                        alarmManager.setAndAllowWhileIdle(
+                            AlarmManager.RTC_WAKEUP,
+                            triggerTime,
+                            pendingIntent
+                        )
                     } else {
                         alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
                     }
                 }
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTime,
+                    pendingIntent
+                )
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
             } else {
@@ -49,7 +61,11 @@ object NoonAlarmScheduler {
         } catch (se: SecurityException) {
             // 権限がなく例外が発生した場合も近似アラームでフォールバック
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTime,
+                    pendingIntent
+                )
             } else {
                 alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
             }

@@ -15,9 +15,10 @@ class IdHistoryStore(context: Context) {
 
     private val appContext: Context = context.applicationContext
 
-    val historyFlow: Flow<List<String>> = appContext.idHistoryDataStore.data.map { prefs: Preferences ->
-        prefs[KEY_HISTORY]?.split(DELIM)?.filter { it.isNotBlank() } ?: emptyList()
-    }
+    val historyFlow: Flow<List<String>> =
+        appContext.idHistoryDataStore.data.map { prefs: Preferences ->
+            prefs[KEY_HISTORY]?.split(DELIM)?.filter { it.isNotBlank() } ?: emptyList()
+        }
 
     suspend fun saveId(id: String, maxSize: Int = 10) {
         val trimmed = id.trim()
@@ -26,7 +27,9 @@ class IdHistoryStore(context: Context) {
             val current = prefs[KEY_HISTORY]?.split(DELIM)?.toMutableList() ?: mutableListOf()
             current.removeAll { it.equals(trimmed, ignoreCase = true) }
             current.add(0, trimmed)
-            while (current.size > maxSize) current.removeLast()
+            while (current.size > maxSize) {
+                current.removeAt(current.size - 1)
+            }
             prefs[KEY_HISTORY] = current.joinToString(DELIM)
         }
     }
