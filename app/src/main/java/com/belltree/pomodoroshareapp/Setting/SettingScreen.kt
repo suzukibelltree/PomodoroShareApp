@@ -31,6 +31,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -87,6 +88,15 @@ fun SettingScreen(
     val ownerPhotoUrl by settingViewModel.ownerPhotoUrl.collectAsState()
     val isUploadingImage by settingViewModel.isUploadingImage.collectAsState()
     
+    // ダークモード判定
+    val isDarkMode = MaterialTheme.colorScheme.background.run {
+        val rgb = this.red + this.green + this.blue
+        rgb < 1.5f // 背景が暗い場合
+    }
+    val textColor = if (isDarkMode) Color(0xFFE6E0E9) else Color(0xFF234121)
+    val bgColor = if (isDarkMode) Color(0xFF1C1B1F) else Color(0xFFFFFBFE)
+    val cardBgColor = if (isDarkMode) Color(0xFF2B2930) else Color.White
+    
     // 画像クロッパー用のランチャー
     val imageCropperLauncher = rememberLauncherForActivityResult(
         contract = CropImageContract()
@@ -110,7 +120,8 @@ fun SettingScreen(
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
                 onNavigationClick = onNavigateHome,
             )
-        }
+        },
+        containerColor = bgColor
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -128,7 +139,6 @@ fun SettingScreen(
                     .align(Alignment.TopCenter)
                     .alpha(0.7f) // 这里指定透明度，范围 0f ~ 1f
             )
-
 
             Column(
                 modifier = modifier
@@ -160,7 +170,7 @@ fun SettingScreen(
                             modifier = Modifier
                                 .size(100.dp)
                                 .align(Alignment.Center),
-                            color = Color(0xFF446E36)
+                            color = if (isDarkMode) Color(0xFF8ECFE3) else Color(0xFF446E36)
                         )
                     }
                 }
@@ -190,14 +200,14 @@ fun SettingScreen(
                         .height(40.dp),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF48B3D3),
-                        disabledContainerColor = Color(0xFFCCCCCC)
+                        containerColor = if (isDarkMode) Color(0xFF48B3D3) else Color(0xFF48B3D3),
+                        disabledContainerColor = if (isDarkMode) Color(0xFF49454E) else Color(0xFFCCCCCC)
                     )
                 ){
                     Text(
                         text = if (isUploadingImage) "アップロード中..." else "画像をアップロード",
                         fontSize = 14.sp,
-                        color = if (isUploadingImage) Color.Gray else Color.White,
+                        color = if (isUploadingImage) (if (isDarkMode) Color(0xFFCAC7D0) else Color.Gray) else Color.White,
                     )
                 }
 
@@ -206,7 +216,7 @@ fun SettingScreen(
                 Text(
                     text = "一週間の目標勉強時間を決めよう\n毎週土曜日にリセットされるよ！",
                     fontSize = 16.sp,
-                    color = Color(0xFF234121),
+                    color = textColor,
                     modifier = Modifier
                         .padding(bottom = 12.dp)
                 )
@@ -223,11 +233,13 @@ fun SettingScreen(
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF446E36),
-                        unfocusedBorderColor = Color(0xFF446E36),
-                        cursorColor = Color(0xFF446E36),
-                        focusedLabelColor = Color(0xFF263F1F),
-                        unfocusedLabelColor = Color(0xFF263F1F)
+                        focusedBorderColor = if (isDarkMode) Color(0xFF8ECFE3) else Color(0xFF446E36),
+                        unfocusedBorderColor = if (isDarkMode) Color(0xFF49454E) else Color(0xFF446E36),
+                        cursorColor = if (isDarkMode) Color(0xFF8ECFE3) else Color(0xFF446E36),
+                        focusedLabelColor = if (isDarkMode) Color(0xFF8ECFE3) else Color(0xFF263F1F),
+                        unfocusedLabelColor = if (isDarkMode) Color(0xFFCAC7D0) else Color(0xFF263F1F),
+                        focusedTextColor = textColor,
+                        unfocusedTextColor = textColor
                     ),
                     modifier = Modifier
                         .width(300.dp)
@@ -265,14 +277,16 @@ fun SettingScreen(
                         .width(160.dp)
                         .height(48.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA6C242)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isDarkMode) Color(0xFF7CB342) else Color(0xFFA6C242)
+                    ),
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Text(
                         text = "目標を設定する",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xF2FFFFFF),
+                        color = Color.White,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -292,7 +306,7 @@ fun SettingScreen(
                                 fontSize = 24.sp,
                                 lineHeight = Variables.StaticLabelLargeLineHeight,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF234121),
+                                color = textColor,
                                 textAlign = TextAlign.Center,
                             ),
                             modifier = Modifier
@@ -305,7 +319,7 @@ fun SettingScreen(
                 Text(
                     text = "勉強するほどたまっていくよ\nたまるほどフレームが豪華になっていくよ！\n毎週土曜日にリセットされるよ",
                     fontSize = 16.sp,
-                    color = Color(0xFF234121),
+                    color = textColor,
                     modifier = Modifier
                         .padding(bottom = 12.dp)
                 )
@@ -318,7 +332,7 @@ fun SettingScreen(
                             fontSize = 24.sp,
                             lineHeight = Variables.StaticLabelLargeLineHeight,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF234121),
+                            color = textColor,
                             textAlign = TextAlign.Center,
                         ),
                         modifier = Modifier
