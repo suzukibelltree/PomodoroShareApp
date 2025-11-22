@@ -18,8 +18,8 @@ android {
         applicationId = "com.belltree.pomodoroshareapp"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.3"
+        versionCode = 5
+        versionName = "1.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // TODO: 本番では gradle.properties など外部から注入

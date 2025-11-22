@@ -24,12 +24,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -42,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
@@ -67,10 +71,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
-import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.Color
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 
 @Composable
 fun SpaceScreen(
@@ -136,6 +136,17 @@ fun SpaceScreen(
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
                 onNavigationClick = { showDialog = true },
                 rightActionIcons = listOf(
+                    Icons.Default.Share to {
+                        val shareText =
+                            "スペースID: ${space.spaceId}"
+                        val intent = android.content.Intent().apply {
+                            action = android.content.Intent.ACTION_SEND
+                            putExtra(android.content.Intent.EXTRA_TEXT, shareText)
+                            type = "text/plain"
+                        }
+                        val shareIntent = android.content.Intent.createChooser(intent, null)
+                        context.startActivity(shareIntent)
+                    },
                     Icons.Default.ContentCopy to {
                         clipboardManager.setText(AnnotatedString(space.spaceId))
                         Toast.makeText(
@@ -222,7 +233,8 @@ fun SpaceScreen(
                         height = 3.dp
                     )
                 }
-            ) {                Tab(
+            ) {
+                Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
                     text = { Text("コメント") },
@@ -345,10 +357,12 @@ private fun CommentSection(
         }
     }
     Column(modifier = Modifier.fillMaxSize()) {
-        Box(modifier = Modifier
-            .weight(1f)
-            .fillMaxWidth()
-            .background(Color(0xFFF3F3F3))) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .background(Color(0xFFF3F3F3))
+        ) {
             LazyColumn(modifier = Modifier.fillMaxSize(), reverseLayout = false) {
                 items(comments) { comment ->
                     CommentRow(
@@ -394,10 +408,12 @@ private fun CommentSection(
 @Composable
 private fun ParticipantSection(participants: List<User>) {
     Column(modifier = Modifier.fillMaxSize()) {
-        Box(modifier = Modifier
-            .weight(1f)
-            .fillMaxWidth()
-            .background(Color(0xFFF3F3F3))) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .background(Color(0xFFF3F3F3))
+        ) {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(participants) { participant -> ParticipantRow(participant = participant) }
             }
