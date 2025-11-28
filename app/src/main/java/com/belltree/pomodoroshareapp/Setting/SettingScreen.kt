@@ -2,30 +2,27 @@ package com.belltree.pomodoroshareapp.Setting
 
 import android.app.AlarmManager
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import com.canhub.cropper.CropImageContract
-import com.canhub.cropper.CropImageContractOptions
-import com.canhub.cropper.CropImageOptions
-import com.canhub.cropper.CropImageView
-import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -33,16 +30,20 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -51,24 +52,20 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.belltree.pomodoroshareapp.R
 import com.belltree.pomodoroshareapp.notification.NoonAlarmScheduler
 import com.belltree.pomodoroshareapp.ui.components.AppTopBar
+import com.canhub.cropper.CropImageContract
+import com.canhub.cropper.CropImageContractOptions
+import com.canhub.cropper.CropImageOptions
+import com.canhub.cropper.CropImageView
 import kotlinx.coroutines.launch
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.draw.clip
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 
 
 object Variables {
@@ -87,7 +84,7 @@ fun SettingScreen(
     var goalStudyTimeInput by remember { mutableStateOf("") }
     val ownerPhotoUrl by settingViewModel.ownerPhotoUrl.collectAsState()
     val isUploadingImage by settingViewModel.isUploadingImage.collectAsState()
-    
+
     // ダークモード判定
     val isDarkMode = MaterialTheme.colorScheme.background.run {
         val rgb = this.red + this.green + this.blue
@@ -96,7 +93,7 @@ fun SettingScreen(
     val textColor = if (isDarkMode) Color(0xFFE6E0E9) else Color(0xFF234121)
     val bgColor = if (isDarkMode) Color(0xFF1C1B1F) else Color(0xFFFFFBFE)
     val cardBgColor = if (isDarkMode) Color(0xFF2B2930) else Color.White
-    
+
     // 画像クロッパー用のランチャー
     val imageCropperLauncher = rememberLauncherForActivityResult(
         contract = CropImageContract()
@@ -107,7 +104,7 @@ fun SettingScreen(
             }
         }
     }
-    
+
     LaunchedEffect(Unit) {
         settingViewModel.loadCurrentUserGoal()
         settingViewModel.loadOwner()
@@ -145,7 +142,7 @@ fun SettingScreen(
                     .fillMaxSize()
                     .padding(2.dp)
                     .width(371.dp)
-                    .height(456.dp) ,
+                    .height(456.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -164,7 +161,7 @@ fun SettingScreen(
                             .size(100.dp)
                             .clip(CircleShape)
                     )
-                    
+
                     if (isUploadingImage) {
                         CircularProgressIndicator(
                             modifier = Modifier
@@ -176,7 +173,7 @@ fun SettingScreen(
                 }
 
                 Button(
-                    onClick = { 
+                    onClick = {
                         // 画像クロッパーを起動（円形クロップ設定）
                         val cropOptions = CropImageContractOptions(
                             uri = null,
@@ -201,9 +198,11 @@ fun SettingScreen(
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isDarkMode) Color(0xFF48B3D3) else Color(0xFF48B3D3),
-                        disabledContainerColor = if (isDarkMode) Color(0xFF49454E) else Color(0xFFCCCCCC)
+                        disabledContainerColor = if (isDarkMode) Color(0xFF49454E) else Color(
+                            0xFFCCCCCC
+                        )
                     )
-                ){
+                ) {
                     Text(
                         text = if (isUploadingImage) "アップロード中..." else "画像をアップロード",
                         fontSize = 14.sp,
@@ -234,10 +233,14 @@ fun SettingScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = if (isDarkMode) Color(0xFF8ECFE3) else Color(0xFF446E36),
-                        unfocusedBorderColor = if (isDarkMode) Color(0xFF49454E) else Color(0xFF446E36),
+                        unfocusedBorderColor = if (isDarkMode) Color(0xFF49454E) else Color(
+                            0xFF446E36
+                        ),
                         cursorColor = if (isDarkMode) Color(0xFF8ECFE3) else Color(0xFF446E36),
                         focusedLabelColor = if (isDarkMode) Color(0xFF8ECFE3) else Color(0xFF263F1F),
-                        unfocusedLabelColor = if (isDarkMode) Color(0xFFCAC7D0) else Color(0xFF263F1F),
+                        unfocusedLabelColor = if (isDarkMode) Color(0xFFCAC7D0) else Color(
+                            0xFF263F1F
+                        ),
                         focusedTextColor = textColor,
                         unfocusedTextColor = textColor
                     ),
@@ -296,7 +299,6 @@ fun SettingScreen(
                 Spacer(modifier = Modifier.height(4.dp))
 
 
-
                 val currentGoal = settingViewModel.goalStudyTime.value
                 if (currentGoal != null) {
                     SelectionContainer {
@@ -351,7 +353,10 @@ fun SettingScreen(
                         .height(56.dp)
                 ) {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(0.dp, Alignment.CenterHorizontally),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            0.dp,
+                            Alignment.CenterHorizontally
+                        ),
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .width(81.dp)
@@ -361,7 +366,6 @@ fun SettingScreen(
                             text = "ログアウト",
                             fontSize = 16.sp,
                             style = TextStyle(
-//
                                 fontWeight = FontWeight(500),
                                 color = Color(0xFFE76D48),
                             )
