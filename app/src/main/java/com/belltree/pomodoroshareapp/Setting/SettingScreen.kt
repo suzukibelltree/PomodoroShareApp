@@ -84,6 +84,7 @@ fun SettingScreen(
     var goalStudyTimeInput by remember { mutableStateOf("") }
     val ownerPhotoUrl by settingViewModel.ownerPhotoUrl.collectAsState()
     val isUploadingImage by settingViewModel.isUploadingImage.collectAsState()
+    var isShowLogoutDialog by remember { mutableStateOf(false) }
 
     // ダークモード判定
     val isDarkMode = MaterialTheme.colorScheme.background.run {
@@ -344,7 +345,9 @@ fun SettingScreen(
                 }
 
                 Button(
-                    onClick = onSignOut,
+                    onClick = {
+                        isShowLogoutDialog = true
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent
                     ),
@@ -373,6 +376,15 @@ fun SettingScreen(
                     }
 
 
+                }
+                if (isShowLogoutDialog) {
+                    LogoutDialog(
+                        onDismiss = { isShowLogoutDialog = false },
+                        onConfirm = {
+                            isShowLogoutDialog = false
+                            onSignOut()
+                        }
+                    )
                 }
             }
         }
