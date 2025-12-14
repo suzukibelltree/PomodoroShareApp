@@ -1,17 +1,50 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+# Android/Gradle
+.gradle/
+**/build/
+**/out/
+
+# Local configuration (never commit)
 local.properties
-app/google-services.json
+**/local.properties
+keystore.properties
+key.properties
 *.keystore
+*.jks
+
+# Firebase (keep secrets out of VCS)
+**/google-services.json
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code
+.vscode/
+
+# Native/NDK
+.externalNativeBuild/
+.cxx/
+
+# Profiling and captures
+captures/
+*.hprof
+
+# Logs
+*.log
+
+# Build artifacts
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Merge/patch leftovers
+*.orig
+*.rej

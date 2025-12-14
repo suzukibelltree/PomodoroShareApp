@@ -1,1 +1,3 @@
 /build
+# Firebase config (do not commit secrets)
+/google-services.json
