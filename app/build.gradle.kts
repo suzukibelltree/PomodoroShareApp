@@ -30,10 +30,25 @@ android {
         }
         val apiKey: String = localProps.getProperty("API_KEY", "")
         buildConfigField("String", "API_KEY", "\"$apiKey\"")
-        val supabaseUrl: String = localProps.getProperty("SUPABASE_URL", "")
+        val supabaseUrl: String = localProps.getProperty("SUPABASE_URL", "").trim().removeSuffix("/")
         val supabaseAnonKey: String = localProps.getProperty("SUPABASE_ANON_KEY", "")
+        val derivedEdgeFunctionUrl = Regex("""https://([^.]+)\.supabase\.co""")
+            .find(supabaseUrl)
+            ?.groupValues
+            ?.getOrNull(1)
+            ?.let { "https://$it.functions.supabase.co/upload-profile" }
+            .orEmpty()
+        val supabaseEdgeFunctionUrl: String =
+            localProps.getProperty("SUPABASE_EDGE_FUNCTION_URL", "")
+                .trim()
+                .ifBlank { derivedEdgeFunctionUrl }
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
+        buildConfigField(
+            "String",
+            "SUPABASE_EDGE_FUNCTION_URL",
+            "\"$supabaseEdgeFunctionUrl\""
+        )
         buildConfigField(
             "String",
             "WEB_CLIENT_ID",

@@ -20,8 +20,6 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.auth
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.storage.storage
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -148,7 +146,7 @@ class SettingViewModel @Inject constructor(
                         
                         // Edge Functionを呼び出してアップロード（既存のupload-profileを使用）
                         val publicUrl = callUploadImageEdgeFunction(
-                            endpoint = "https://jaemimxpboicrxbpaycq.functions.supabase.co/upload-profile",
+                            endpoint = BuildConfig.SUPABASE_EDGE_FUNCTION_URL,
                             userId = uid,
                             imageBase64 = base64Image,
                             token = token
@@ -205,6 +203,11 @@ class SettingViewModel @Inject constructor(
         imageBase64: String,
         token: String
     ): String? = withContext(Dispatchers.IO) {
+        if (endpoint.isBlank()) {
+            Log.w("SettingViewModel", "SUPABASE_EDGE_FUNCTION_URL is blank")
+            return@withContext null
+        }
+
         try {
             // Edge FunctionはimageUrlパラメータでData URIを受け取る
             val jsonBody = """{"userId":"$userId","imageUrl":"$imageBase64"}"""

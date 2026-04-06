@@ -6,6 +6,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.belltree.pomodoroshareapp.BuildConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import com.belltree.pomodoroshareapp.domain.models.User
@@ -19,10 +20,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import jakarta.inject.Inject
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.TimeoutCancellationException
@@ -91,8 +90,6 @@ class AuthViewModel @Inject constructor(
     fun onLoginSuccess(user: FirebaseUser?) {
         _currentUser.value = user
         _errorMessage.value = null
-        val bucket = "pomodoro"
-        val path = "users/${user?.uid}/profile.jpg"
 
         viewModelScope.launch(SupervisorJob() + Dispatchers.IO) {
             if (user == null) {
@@ -108,10 +105,8 @@ class AuthViewModel @Inject constructor(
                 val publicUrlFromEdge = try {
                     withTimeout(5000) {
                         callUploadProfileEdgeFunction(
-                            //edge functionURL
-                            endpoint = "https://jaemimxpboicrxbpaycq.functions.supabase.co/upload-profile",
+                            endpoint = BuildConfig.SUPABASE_EDGE_FUNCTION_URL,
                             userId = user.uid,
-                            //google画像のURL
                             sourceImageUrl = googleUrl
                         )
                     }
@@ -224,6 +219,11 @@ private suspend fun callUploadProfileEdgeFunction(
     userId: String,
     sourceImageUrl: String
 ): String? = withContext(Dispatchers.IO) {
+    if (endpoint.isBlank()) {
+        Log.w("AuthViewModel", "SUPABASE_EDGE_FUNCTION_URL is blank")
+        return@withContext null
+    }
+
     // Get Firebase ID token
     val token = Firebase.auth.currentUser?.getIdToken(false)
         ?.addOnFailureListener { Log.e("ID_TOKEN", "failed", it) }
