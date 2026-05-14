@@ -1,0 +1,24 @@
+# Build artifacts
+build/
+.gradle/
+.local/
+
+# IDE
+.idea/
+*.iml
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.*
+
+# Binary / large files
+*.png
+*.jpg
+*.jpeg
+*.mp4
+
+# Generated
+**/generated/

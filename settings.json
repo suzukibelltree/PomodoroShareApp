@@ -1,0 +1,30 @@
+{
+  "skills": [
+    "claude/skills/00_general.md",
+    "claude/skills/01_output.md",
+    "claude/skills/architecture.md",
+    "claude/skills/compose.md",
+    "claude/skills/state.md",
+    "claude/skills/test.md"
+  ],
+  "permissions": {
+    "allow": [
+      "git status",
+      "git diff",
+      "./gradlew build",
+      "./gradlew test",
+      "ls",
+      "cat",
+      "./gradlew lint",
+      "./gradlew detekt"
+    ],
+    "deny": [
+      "git commit",
+      "git push",
+      "rm -rf",
+      "git reset --hard",
+      "git clean -fd",
+      "mv /*"
+    ]
+  }
+}
